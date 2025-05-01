@@ -22,10 +22,9 @@ export default function Register() {
     setErrors({});
     try {
       await axios.post('http://localhost:8000/api/auth/register/', formData);
-      // Після успішної реєстрації — перенаправимо на логін
       navigate('/login');
     } catch (err) {
-      if (err.response && err.response.data) {
+      if (err.response?.data) {
         setErrors(err.response.data);
       } else {
         console.error(err);
@@ -34,54 +33,108 @@ export default function Register() {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: 400, margin: '0 auto' }}>
-      <h2>Реєстрація</h2>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+        <h2 className="text-2xl font-semibold text-center mb-6">Реєстрація</h2>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Username */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Username
+            </label>
+            <input
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {errors.username && (
+              <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+            )}
+          </div>
 
-      <label>Username</label>
-      <input
-        name="username"
-        value={formData.username}
-        onChange={handleChange}
-      />
-      {errors.username && <p style={{color: 'red'}}>{errors.username}</p>}
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
+            <input
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+            )}
+          </div>
 
-      <label>Email</label>
-      <input
-        name="email"
-        type="email"
-        value={formData.email}
-        onChange={handleChange}
-      />
-      {errors.email && <p style={{color: 'red'}}>{errors.email}</p>}
+          {/* Password */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            )}
+          </div>
 
-      <label>Password</label>
-      <input
-        name="password"
-        type="password"
-        value={formData.password}
-        onChange={handleChange}
-      />
-      {errors.password && <p style={{color: 'red'}}>{errors.password}</p>}
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Confirm Password
+            </label>
+            <input
+              name="password2"
+              type="password"
+              value={formData.password2}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {errors.password2 && (
+              <p className="mt-1 text-sm text-red-600">{errors.password2}</p>
+            )}
+          </div>
 
-      <label>Confirm Password</label>
-      <input
-        name="password2"
-        type="password"
-        value={formData.password2}
-        onChange={handleChange}
-      />
-      {errors.password2 && <p style={{color: 'red'}}>{errors.password2}</p>}
+          {/* Role */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Role <span className="text-gray-400 text-xs">(наприклад: manager)</span>
+            </label>
+            <input
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              placeholder="manager"
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {errors.role && (
+              <p className="mt-1 text-sm text-red-600">{errors.role}</p>
+            )}
+          </div>
 
-      <label>Role</label>
-      <input
-        name="role"
-        value={formData.role}
-        onChange={handleChange}
-        placeholder="Наприклад: manager"
-      />
-      {errors.role && <p style={{color: 'red'}}>{errors.role}</p>}
-
-      <button type="submit" style={{ marginTop: 16 }}>Зареєструватися</button>
-    </form>
+          <button
+            type="submit"
+            className="w-full py-2 bg-blue-600 text-white font-medium rounded-md
+                       hover:bg-blue-700 transition-colors"
+          >
+            Зареєструватися
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
