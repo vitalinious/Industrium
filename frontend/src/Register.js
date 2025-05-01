@@ -40,7 +40,7 @@ export default function Register() {
           {/* Username */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Username
+              Логін
             </label>
             <input
               name="username"
@@ -75,7 +75,7 @@ export default function Register() {
           {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Password
+              Пароль
             </label>
             <input
               name="password"
@@ -93,7 +93,7 @@ export default function Register() {
           {/* Confirm Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Confirm Password
+              Підтвердіть пароль
             </label>
             <input
               name="password2"
@@ -111,7 +111,7 @@ export default function Register() {
           {/* Role */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Role <span className="text-gray-400 text-xs">(наприклад: manager)</span>
+              Посада <span className="text-gray-400 text-xs">(наприклад: manager)</span>
             </label>
             <input
               name="role"

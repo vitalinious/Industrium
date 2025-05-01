@@ -11,16 +11,32 @@ export default function Login() {
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
+  
     try {
-      const { data } = await axios.post(
+      // 1) Получаем JWT-токены
+      const { data: tokens } = await axios.post(
         'http://localhost:8000/api/token/',
         { username, password }
       );
-      localStorage.setItem('access_token',  data.access);
-      localStorage.setItem('refresh_token', data.refresh);
-      axios.defaults.headers.common['Authorization'] = 'Bearer ' + data.access;
-      navigate('/dashboard');
+      localStorage.setItem('access_token',  tokens.access);
+      localStorage.setItem('refresh_token', tokens.refresh);
+      axios.defaults.headers.common['Authorization'] = 'Bearer ' + tokens.access;
+  
+      // 2) Запрашиваем профиль, чтобы узнать роль
+      const { data: profile } = await axios.get(
+        'http://localhost:8000/api/auth/profile/'
+      );
+      const { role } = profile;
+      localStorage.setItem('user_role', role);
+  
+      // 3) Перенаправляем по роли
+      if (role === 'chief') {
+        navigate('/chief');
+      } else {
+        navigate('/employee');
+      }
     } catch (err) {
+      // Если ошибка на любом шаге – показываем сообщение
       setError('Невірний логін або пароль');
     }
   };
