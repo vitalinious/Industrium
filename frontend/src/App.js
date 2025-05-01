@@ -1,22 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-function App() {
-  const [message, setMessage] = useState('');
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Login     from './Login';
+import Register  from './Register';
+import Dashboard from './Dashboard';
 
-  useEffect(() => {
-    axios.get('http://localhost:8000/api/hello/')
-      .then(res => setMessage(res.data.message))
-      .catch(err => console.error(err));
-  }, []);
-
+export default function App(){
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>{message ? message : "Loading..."}</h1>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/login"    element={<Login/>}/>
+        <Route path="/register" element={<Register/>}/>
+        <Route path="/dashboard"element={<Dashboard/>}/>
+      </Routes>
+    </Router>
   );
 }
-
-export default App;
