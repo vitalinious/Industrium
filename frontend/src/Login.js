@@ -16,7 +16,7 @@ export default function Login() {
       // 1) Получаем JWT-токены
       const { data: tokens } = await axios.post(
         'http://localhost:8000/api/token/',
-        { username, password }
+        { password, username }
       );
       localStorage.setItem('access_token',  tokens.access);
       localStorage.setItem('refresh_token', tokens.refresh);
