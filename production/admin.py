@@ -3,6 +3,7 @@ from .models import (
     User, Workshop, Worker, Task, Document,
     Equipment, Material, MaterialUsage, PerformanceReport
 )
+from django.contrib.auth.admin import UserAdmin
 
 admin.site.register(User)
 admin.site.register(Workshop)
