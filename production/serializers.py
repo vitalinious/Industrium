@@ -3,24 +3,39 @@ from django.contrib.auth.password_validation import validate_password
 from .models import User
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password  = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    password2 = serializers.CharField(write_only=True, required=True)
+    password2 = serializers.CharField(write_only=True)
 
     class Meta:
         model  = User
-        fields = ('username','email','password','password2','role')
+        fields = [
+            'username', 'password', 'password2',
+            'first_name', 'last_name', 'middle_name',
+            'email', 'phone_number', 'department', 'position',
+            'role',
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'role':     {'read_only': True},
+        }
 
-    def validate(self, attrs):
-        if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({"password":"Passwords do not match."})
-        return attrs
+    def validate(self, data):
+        if data['password'] != data.pop('password2'):
+            raise serializers.ValidationError("Passwords must match")
+        return data
 
     def create(self, validated_data):
-        user = User.objects.create(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            role=validated_data['role']
-        )
-        user.set_password(validated_data['password'])
-        user.save()
+        # role валидация: у нас всегда employee
+        validated_data['role'] = 'employee'
+        user = User.objects.create_user(**validated_data)
         return user
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = User
+        fields = [
+            'username', 'email',
+            'first_name', 'last_name', 'middle_name',
+            'phone_number', 'department', 'position',
+            'role', 'date_joined',
+        ]
+        read_only_fields = fields

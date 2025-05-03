@@ -21,7 +21,7 @@ export default function Login() {
       localStorage.setItem('auth_token', data.token);
       axios.defaults.headers.common['Authorization'] = 'Token ' + data.token;
   
-      navigate('/chief');
+      navigate('/account');
     } catch (err) {
       setError('Невірний логін або пароль');
     }

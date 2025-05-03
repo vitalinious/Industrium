@@ -1,18 +1,25 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Navigate } from 'react-router-dom';
-import Login     from './Login';
-import EmployeeDashboard from './EmployeeDashboard';
-import ChiefDashboard from './ChiefDashboard';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Layout   from './Layout';
+import Login    from './Login';
+import Account from './account';
+import Dashboard from './Dashboard';
 
-export default function App(){
+export default function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-     <Route path="/"         element={<Navigate to="/login" />} />
-     <Route path="/login"    element={<Login />} />
-     <Route path="/employee" element={<EmployeeDashboard />} />
-     <Route path="/chief"    element={<ChiefDashboard />} />
-   </Routes>
-    </Router>
+        {/* Публічні */}
+        <Route path="/login" element={<Login />} />
+
+        <Route path="/account" element={
+          <Layout>
+            <Account />
+          </Layout>
+        }/>
+
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
