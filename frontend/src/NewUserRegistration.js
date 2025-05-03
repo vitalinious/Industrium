@@ -16,7 +16,6 @@ export default function NewUserRegistration() {
     e.preventDefault();
     setErrors({}); setSuccess('');
     try {
-      // Здесь axios уже имеет default Authorization с access-token
       await axios.post(
         'http://localhost:8000/api/auth/register/',
         formData
