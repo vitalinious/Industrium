@@ -1,21 +1,46 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-# Користувач з ролями
-class User(AbstractUser):
-    ROLE_CHOICES = (
-        ('chief', 'Начальник'),
-        ('employee', 'Працівник'),
-    )
-    role         = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    middle_name  = models.CharField("По батькові", max_length=150, blank=True)
-    phone_number = models.CharField("Номер телефону", max_length=20)
-    department   = models.CharField("Відділ", max_length=100)
-    position     = models.CharField("Посада", max_length=100)
-    date_joined = models.DateTimeField(auto_now_add=True)
+class Department(models.Model):
+    name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
-        return self.username
+        return self.name
+
+class Position(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class User(AbstractUser):
+    ROLE_CHOICES = (
+    ('chief', 'Начальник'),
+    ('employee', 'Працівник'),
+    )
+    
+    middle_name  = models.CharField('По батькові', max_length=150, blank=True)
+    phone_number = models.CharField('Телефон', max_length=20, blank=True)
+
+    department = models.ForeignKey(
+    Department,
+    null=True,
+    blank=True,
+    default=None,           # ← ось тут
+    on_delete=models.SET_NULL,
+    verbose_name='Відділ'
+    )
+    position = models.ForeignKey(
+        Position,
+        null=True,
+        blank=True,
+        default=None,           # ← і тут
+        on_delete=models.SET_NULL,
+        verbose_name='Посада'
+    )
+
+    role         = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    date_joined = models.DateTimeField(auto_now_add=True)
 
 # Цех
 class Workshop(models.Model):

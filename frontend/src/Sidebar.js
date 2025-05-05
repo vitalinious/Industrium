@@ -10,7 +10,6 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function Sidebar() {
-  // 1) Опишите свои пункты, указывая подменю в children
   const links = [
     {
       label: 'Дашборд',
