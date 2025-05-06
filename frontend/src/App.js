@@ -4,6 +4,7 @@ import Layout     from './Layout';
 import Login      from './Login';
 import Account    from './account';
 import Dashboard  from './Dashboard';
+import Positions from './positions';
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="account" element={<Account />} />
+          <Route path="positions" element={<Positions />} />
           {/* Додайте тут інші сторінки як вкладені */}
         </Route>
 

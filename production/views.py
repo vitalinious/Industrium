@@ -1,14 +1,13 @@
 from django.shortcuts import render
-
+from rest_framework import viewsets
 from rest_framework.views     import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from .serializers import RegisterSerializer, ProfileSerializer
-from .models import User
+from .serializers import RegisterSerializer, ProfileSerializer, PositionSerializer
+from .models import User, Position
 from .permissions import IsChief
-
 
 @api_view(['GET'])
 def hello_world(request):
@@ -25,3 +24,7 @@ class ProfileView(APIView):
     def get(self, request):
         serializer = ProfileSerializer(request.user)
         return Response(serializer.data)
+    
+class PositionViewSet(viewsets.ModelViewSet):
+    queryset = Position.objects.all()
+    serializer_class = PositionSerializer
