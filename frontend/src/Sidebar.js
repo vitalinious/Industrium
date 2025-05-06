@@ -71,7 +71,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className={`transition-all duration-300 bg-gray-800 text-gray-200 h-screen ${collapsed ? 'w-16' : 'w-64'} flex-shrink-0`}> 
+    <aside className={`transition-all duration-300 bg-gray-800 border-r border-gray-700 text-gray-200 h-screen ${collapsed ? 'w-16' : 'w-64'} flex-shrink-0` }> 
       <div className="h-16 flex items-center px-3 space-x-3">
         <button onClick={() => setCollapsed(!collapsed)} className="text-white focus:outline-none">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
