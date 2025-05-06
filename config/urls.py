@@ -19,10 +19,13 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.authtoken.views import obtain_auth_token
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/token/',   TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/',      include('production.urls')),
-    path('api/auth/login/', obtain_auth_token, name='api_token_auth'),
+
+    
+    path('api/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

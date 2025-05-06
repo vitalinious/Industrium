@@ -13,13 +13,15 @@ export default function Login() {
     setError('');
   
     try {
-      const { data } = await axios.post(
-        '/api/auth/login/',
-        { username, password }
-      );
-
-      localStorage.setItem('auth_token', data.token);
-      axios.defaults.headers.common['Authorization'] = 'Token ' + data.token;
+      const { data } = await axios.post('/api/auth/login/', {
+        username,
+        password
+      });
+  
+      console.log('Login response:', data);
+  
+      localStorage.setItem('access_token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
   
       navigate('/account');
     } catch (err) {

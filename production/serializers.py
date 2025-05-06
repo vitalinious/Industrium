@@ -24,18 +24,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        # role валидация: у нас всегда employee
         validated_data['role'] = 'employee'
         user = User.objects.create_user(**validated_data)
         return user
 
 class ProfileSerializer(serializers.ModelSerializer):
+    position = serializers.StringRelatedField()
+
     class Meta:
-        model  = User
+        model = User
         fields = [
-            'username', 'email',
-            'first_name', 'last_name', 'middle_name',
-            'phone_number', 'department', 'position',
-            'role', 'date_joined',
+            'username', 'email', 'first_name', 'last_name',
+            'middle_name', 'phone_number', 'position', 'date_joined'
         ]
-        read_only_fields = fields
