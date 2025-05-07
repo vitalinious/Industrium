@@ -1,21 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from './api';
 
 export default function Account() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const token = localStorage.getItem('access_token');
-        console.log('Token for header:', token);
-        const { data } = await axios.get('/api/auth/profile/', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        const { data } = await api.get('/auth/profile/');
         setProfile(data);
       } catch (err) {
         console.error(err);
@@ -29,7 +23,7 @@ export default function Account() {
   }, []);
 
   if (loading) return <div className="p-6 text-center">Завантаження...</div>;
-  if (error)   return <div className="p-6 text-center text-red-600">{error}</div>;
+  if (error) return <div className="p-6 text-center text-red-600">{error}</div>;
 
   return (
     <div className="p-6 bg-white shadow h-full rounded overflow-auto">
@@ -85,15 +79,15 @@ export default function Account() {
               readOnly
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded"
             />
-          </div>      
-          <button
-            className="mt-4 px-4 py-2 bg-gray-800 text-white rounded hover:bg-blue-800"
-          >
+          </div>
+
+          <button className="mt-4 px-4 py-2 bg-gray-800 text-white rounded hover:bg-blue-800">
             Змінити пароль
           </button>
         </section>
+
         <section className="space-y-4">
-        <div>
+          <div>
             <label className="block text-sm text-gray-700">Посада</label>
             <input
               type="text"

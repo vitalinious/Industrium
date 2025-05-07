@@ -1,37 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import api from '../../api';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
 export default function CreatePosition() {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
-  const [token, setToken] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const tokenFromStorage = localStorage.getItem('access_token');
-    if (!tokenFromStorage) {
-      navigate('/login');
-      return;
-    }
-    setToken(tokenFromStorage);
-  }, [navigate]);
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    setError('');
 
     try {
-      await axios.post('/api/positions/', { name }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post('/positions/', { name });
       navigate('/department/positions');
     } catch (err) {
       console.error('Помилка створення посади:', err);
       setError('Не вдалося створити посаду');
     }
   };
-
   return (
     <div className="p-6 bg-white shadow h-full rounded overflow-auto">
         <div className="grid md:grid-cols-2 gap-6">

@@ -1,29 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { Edit2, MoreHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import FilterPopover from './filter'
+import useDeleteItem from '../../hooks/useDeleteItem';
 
 export default function Positions() {
   const [positions, setPositions] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchPositions() {
       try {
-        const token = localStorage.getItem('access_token'); 
-        if (!token) {
-          navigate('/login');
-          return;
-        }
-
-        const { data } = await axios.get('/api/positions/', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
+        const { data } = await api.get('/positions/');
         setPositions(data);
       } catch (err) {
         console.error(err.response || err);
@@ -38,19 +29,26 @@ export default function Positions() {
     }
 
     fetchPositions();
-  }, [navigate]);
+  }, []);
+
+  const { deleteItem, isLoading } = useDeleteItem({
+    endpoint: 'positions',
+    onSuccess: (id) => setPositions(prev => prev.filter(p => p.id !== id))
+  });
 
   if (loading) return <div className="p-6 text-center">Завантаження…</div>;
-  if (error)   return <div className="p-6 text-center text-red-600">{error}</div>;
+  if (error) return <div className="p-6 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="pt-2 px-6 pb-6 space-y-4">
+    <div className="pb-3 space-y-4">
       <div className="p-3 bg-white shadow rounded flex justify-between mb-2">
-        <button className="bg-gray-800 text-white hover:bg-blue-800 px-4 py-2 rounded"
-        onClick={() => navigate('/department/positions/add')}>
-        Додати
+        <button
+          className="bg-gray-800 text-white hover:bg-blue-800 px-4 py-2 rounded"
+          onClick={() => navigate('/department/positions/add')}
+        >
+          Додати
         </button>
-        <button className="bg-gray-800 text-white hover:bg-blue-800 px-4 py-2 rounded">Фільтри</button>
+        <FilterPopover onFilter={(filteredData) => setPositions(filteredData)} />
       </div>
 
       <div className="overflow-x-auto bg-white shadow rounded">
@@ -73,8 +71,8 @@ export default function Positions() {
                   <button title="Редагувати">
                     <Edit2 size={16} className="text-gray-400 hover:text-white" />
                   </button>
-                  <button title="Ще">
-                    <MoreHorizontal size={16} className="text-gray-400 hover:text-white" />
+                  <button onClick={() => deleteItem(pos.id)} disabled={isLoading}>
+                    Видалити
                   </button>
                 </td>
               </tr>
