@@ -1,10 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout     from './Layout';
-import Login      from './Login';
+import Layout     from './layout/Layout';
+import Login      from './login';
 import Account    from './account';
 import Dashboard  from './Dashboard';
-import Positions from './positions';
+import Positions from './department/positions/positions';
+import CreatePosition from './department/positions/add';
 
 export default function App() {
   return (
@@ -17,8 +18,8 @@ export default function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="account" element={<Account />} />
-          <Route path="positions" element={<Positions />} />
-          {/* Додайте тут інші сторінки як вкладені */}
+          <Route path="department/positions" element={<Positions />} />
+          <Route path="department/positions/add" element={<CreatePosition />} />
         </Route>
 
         {/* Усі інші шляхи редіректять на логін */}
