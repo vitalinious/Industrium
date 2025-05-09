@@ -1,10 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import RegisterUserView, ProfileView, PositionViewSet, DepartmentViewSet, suggest_positions, suggest_departments
+from .views import RegisterUserView, ProfileView, PositionViewSet, DepartmentViewSet, EmployeeViewSet, suggest_positions, suggest_departments
 
 router = DefaultRouter()
 router.register(r'positions', PositionViewSet, basename='position')
 router.register(r'departments', DepartmentViewSet, basename='department')
+router.register(r'employees', EmployeeViewSet, basename='user')
 
 urlpatterns = [
     path('auth/create-employee/', RegisterUserView.as_view(), name='create-employee'),

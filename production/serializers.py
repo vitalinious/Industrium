@@ -1,8 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from .models import User
-from .models import Position
-from .models import Department
+from .models import User, Position, Department, User
 
 class RegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True)
@@ -49,3 +47,23 @@ class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
         fields = ['id', 'name']
+        
+class EmployeeSerializer(serializers.ModelSerializer):
+    department = serializers.StringRelatedField(read_only=True)
+    position   = serializers.StringRelatedField(read_only=True)
+    
+    class Meta:
+        model = User
+
+        fields = [
+            'id',
+            'first_name',
+            'last_name',
+            'middle_name',
+            'email',
+            'phone_number',
+            'department',
+            'position',
+            'date_joined',
+        ]
+        read_only_fields = ['id', 'date_joined']

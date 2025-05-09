@@ -5,8 +5,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from .serializers import RegisterSerializer, ProfileSerializer, PositionSerializer, DepartmentSerializer
-from .models import User, Position, Department
+from .serializers import RegisterSerializer, ProfileSerializer, PositionSerializer, DepartmentSerializer, EmployeeSerializer
+from .models import User, Position, Department, User
 from .permissions import IsChief
 
 class RegisterUserView(generics.CreateAPIView):
@@ -44,6 +44,11 @@ class DepartmentViewSet(viewsets.ModelViewSet):
             names = [n.strip() for n in name_param.split(',') if n.strip()]
             queryset = queryset.filter(name__in=names)
         return queryset
+    
+class EmployeeViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = EmployeeSerializer
+    permission_classes = [IsAuthenticated]
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
