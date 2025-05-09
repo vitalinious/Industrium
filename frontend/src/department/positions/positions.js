@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api';
-import { Edit2, MoreHorizontal } from 'lucide-react';
+import { Edit2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FilterPopover from './filter'
 import useDeleteItem from '../../hooks/useDeleteItem';
@@ -36,6 +36,11 @@ export default function Positions() {
     onSuccess: (id) => setPositions(prev => prev.filter(p => p.id !== id))
   });
 
+  const handleEdit = (id) => {
+    navigate(`/department/positions/edit/${id}`);
+  };
+    
+
   if (loading) return <div className="p-6 text-center">Завантаження…</div>;
   if (error) return <div className="p-6 text-center text-red-600">{error}</div>;
 
@@ -68,11 +73,21 @@ export default function Positions() {
                 </td>
                 <td className="px-4 py-3">{pos.name}</td>
                 <td className="px-4 py-3 text-right space-x-2">
-                  <button title="Редагувати">
+                  <button
+                    onClick={() => handleEdit(pos.id)}
+                    title="Редагувати"
+                    className="p-1 hover:bg-gray-700 rounded"
+                  >
                     <Edit2 size={16} className="text-gray-400 hover:text-white" />
                   </button>
-                  <button onClick={() => deleteItem(pos.id)} disabled={isLoading}>
-                    Видалити
+                  
+                  <button
+                    onClick={() => deleteItem(pos.id)}
+                    disabled={isLoading}
+                    className="p-1 hover:bg-red-50 rounded"
+                    title="Видалити"
+                  >
+                    <X size={16} className="text-red-500 hover:text-red-700" />
                   </button>
                 </td>
               </tr>

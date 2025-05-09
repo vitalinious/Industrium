@@ -6,6 +6,7 @@ import Account    from './account';
 import Dashboard  from './Dashboard';
 import Positions from './department/positions/positions';
 import CreatePosition from './department/positions/add';
+import EditPosition from './department/positions/edit';
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="account" element={<Account />} />
           <Route path="department/positions" element={<Positions />} />
           <Route path="department/positions/add" element={<CreatePosition />} />
+          <Route path="department/positions/edit/:id" element={<EditPosition />} />
         </Route>
 
         {/* Усі інші шляхи редіректять на логін */}
