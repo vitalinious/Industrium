@@ -4,9 +4,14 @@ import Layout     from './layout/Layout';
 import Login      from './login';
 import Account    from './account';
 import Dashboard  from './Dashboard';
-import Positions from './department/positions/positions';
-import CreatePosition from './department/positions/add';
-import EditPosition from './department/positions/edit';
+
+import Positions      from      './department/positions/positions';
+import CreatePosition from      './department/positions/add';
+import EditPosition   from      './department/positions/edit';
+
+import Departments       from   './department/departments/departments';
+import CreateDepartment  from   './department/departments/add';
+import EditDepartment    from   './department/departments/edit';
 
 export default function App() {
   return (
@@ -19,9 +24,14 @@ export default function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="account" element={<Account />} />
+          
           <Route path="department/positions" element={<Positions />} />
           <Route path="department/positions/add" element={<CreatePosition />} />
           <Route path="department/positions/edit/:id" element={<EditPosition />} />
+
+          <Route path="department/departments"            element={<Departments />} />
+          <Route path="department/departments/add"        element={<CreateDepartment />} />
+          <Route path="department/departments/edit/:id"   element={<EditDepartment />} />
         </Route>
 
         {/* Усі інші шляхи редіректять на логін */}

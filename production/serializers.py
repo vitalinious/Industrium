@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from .models import User
 from .models import Position
+from .models import Department
 
 class RegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True)
@@ -42,4 +43,9 @@ class ProfileSerializer(serializers.ModelSerializer):
 class PositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Position
+        fields = ['id', 'name']
+        
+class DepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
         fields = ['id', 'name']

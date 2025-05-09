@@ -5,8 +5,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from .serializers import RegisterSerializer, ProfileSerializer, PositionSerializer
-from .models import User, Position
+from .serializers import RegisterSerializer, ProfileSerializer, PositionSerializer, DepartmentSerializer
+from .models import User, Position, Department
 from .permissions import IsChief
 
 class RegisterUserView(generics.CreateAPIView):
@@ -33,6 +33,18 @@ class PositionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(name__in=names)
         return queryset
     
+class DepartmentViewSet(viewsets.ModelViewSet):
+    serializer_class = DepartmentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Department.objects.all()
+        name_param = self.request.query_params.get('name')
+        if name_param:
+            names = [n.strip() for n in name_param.split(',') if n.strip()]
+            queryset = queryset.filter(name__in=names)
+        return queryset
+    
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def suggest_positions(request):
@@ -40,5 +52,15 @@ def suggest_positions(request):
     if name_query:
         positions = Position.objects.filter(name__icontains=name_query)[:10]
         data = PositionSerializer(positions, many=True).data
+        return Response(data)
+    return Response([])
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def suggest_departments(request):
+    name_query = request.GET.get('name', '')
+    if name_query:
+        qs = Department.objects.filter(name__icontains=name_query)[:10]
+        data = DepartmentSerializer(qs, many=True).data
         return Response(data)
     return Response([])

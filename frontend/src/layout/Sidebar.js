@@ -55,7 +55,7 @@ export default function Sidebar() {
       to: '/department',
       children: [
         { label: 'Співробітники', to: '/department/employees' },
-        { label: 'Відділи', to: '/department/unit' },
+        { label: 'Відділи', to: '/department/departments' },
         { label: 'Посади', to: '/department/positions' },
       ]
     },
