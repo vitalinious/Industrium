@@ -40,11 +40,19 @@ export default function EditDepartment() {
           />
         </div>
         {error && <p className="text-red-500">{error}</p>}
+
         <div className="flex space-x-2">
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
             Зберегти
           </button>
-          <button type="button" onClick={()=>navigate('/department/departments')} className="px-4 py-2 border rounded hover:bg-gray-100">
+          <button
+            type="button"
+            onClick={() => navigate('/department/departments')}
+            className="px-4 py-2 border rounded hover:bg-gray-100"
+          >
             Скасувати
           </button>
         </div>

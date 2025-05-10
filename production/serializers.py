@@ -1,6 +1,11 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from .models import User, Position, Department, User
+from .models import Position, Department
+from django.contrib.auth import get_user_model
+import random
+import string
+
+User = get_user_model()
 
 class RegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True)
@@ -39,9 +44,18 @@ class ProfileSerializer(serializers.ModelSerializer):
         ]
 
 class PositionSerializer(serializers.ModelSerializer):
+    department = serializers.PrimaryKeyRelatedField(
+        queryset=Department.objects.all()
+    )
+    department_name = serializers.CharField(
+        source='department.name',
+        read_only=True
+    )
+
     class Meta:
         model = Position
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'department', 'department_name']
+        read_only_fields = ['id']
         
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,21 +63,53 @@ class DepartmentSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
         
 class EmployeeSerializer(serializers.ModelSerializer):
-    department = serializers.StringRelatedField(read_only=True)
-    position   = serializers.StringRelatedField(read_only=True)
-    
+    password = serializers.CharField(write_only=True, required=False)
+    username = serializers.CharField(read_only=True)
+
+    department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all())
+    position   = serializers.PrimaryKeyRelatedField(queryset=Position.objects.all())
+    department_name = serializers.CharField(source='department.name', read_only=True)
+    position_name   = serializers.CharField(source='position.name',   read_only=True)
+    full_name = serializers.SerializerMethodField()
+    date_joined = serializers.DateTimeField(format='%d.%m.%Y', read_only=True)
+
     class Meta:
         model = User
-
         fields = [
-            'id',
-            'first_name',
-            'last_name',
-            'middle_name',
-            'email',
-            'phone_number',
-            'department',
-            'position',
-            'date_joined',
+            'id','username','password',
+            'first_name','last_name','middle_name','full_name',
+            'email','phone_number',
+            'department','department_name',
+            'position','position_name',
+            'role','date_joined',
         ]
-        read_only_fields = ['id', 'date_joined']
+        read_only_fields = ['id','username','date_joined',
+                            'department_name','position_name','full_name']
+
+    def get_full_name(self, obj):
+        return ' '.join(filter(None, [obj.last_name, obj.first_name, obj.middle_name]))
+
+    def create(self, validated_data):
+        pwd = validated_data.pop('password', None)
+        if not pwd:
+            pwd = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+
+        email = validated_data.get('email','')
+        local = email.split('@')[0]
+        suffix = ''.join(random.choices(string.digits, k=3))
+        uname = f"{local}#{suffix}"
+
+        user = User.objects.create(username=uname, **validated_data)
+        user.set_password(pwd)
+        user.save()
+
+        self._generated_username = uname
+        self._generated_password = pwd
+        return user
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if hasattr(self, '_generated_username'):
+            data['username'] = self._generated_username
+            data['password'] = self._generated_password
+        return data

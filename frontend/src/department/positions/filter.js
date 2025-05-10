@@ -4,56 +4,64 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import api from '../../api';
 
 export default function FilterPopover({ onFilter }) {
-  const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
-  const [selectedItems, setSelectedItems] = useState([]);
+  const [nameQuery, setNameQuery]         = useState('');
+  const [deptList, setDeptList]           = useState([]);
+  const [selectedDept, setSelectedDept]   = useState('');
+  const [suggestions, setSuggestions]     = useState([]);
+  const [selectedNames, setSelectedNames] = useState([]);
 
+  // 1. Підвантажуємо доступні відділи
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      if (query.length > 0) {
-        api.get(`/positions/suggest/?name=${query}`)
-          .then(res => setSuggestions(res.data))
-          .catch(() => setSuggestions([]));
-      } else {
-        setSuggestions([]);
-      }
-    }, 300);
+    api.get('/departments/')
+      .then(res => setDeptList(res.data))
+      .catch(() => setDeptList([]));
+  }, []);
 
-    return () => clearTimeout(delayDebounce);
-  }, [query]);
-
-  const handleSelect = (value) => {
-    if (!selectedItems.includes(value)) {
-      setSelectedItems(prev => [...prev, value]);
+  // 2. Автодоповнення по назві в межах selectedDept
+  useEffect(() => {
+    if (!nameQuery) {
+      setSuggestions([]);
+      return;
     }
-    setQuery('');
+    const timeout = setTimeout(() => {
+      api.get('/positions/suggest/', {
+        params: {
+          name: nameQuery,
+          ...(selectedDept && { department: selectedDept }),
+        }
+      })
+      .then(res => setSuggestions(res.data))
+      .catch(() => setSuggestions([]));
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [nameQuery, selectedDept]);
+
+  const handleNameSelect = (name) => {
+    if (!selectedNames.includes(name)) {
+      setSelectedNames(prev => [...prev, name]);
+    }
+    setNameQuery('');
     setSuggestions([]);
   };
 
-  const handleRemove = (index) => {
-    setSelectedItems(prev => prev.filter((_, i) => i !== index));
-  };
+  const handleRemoveName = i =>
+    setSelectedNames(prev => prev.filter((_, idx) => idx !== i));
 
   const handleClearAll = () => {
-    setSelectedItems([]);
+    setSelectedNames([]);
+    setSelectedDept('');
   };
 
-  const handleFilterClick = async () => {
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await api.get('/positions/', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        params: {
-          name: selectedItems.join(',')
-        }
-      });
-      console.log('filtered result:', response.data);
-      onFilter(response.data);
-    } catch (error) {
-      console.error('Фільтрація не вдалася', error);
-    }
+  // 3. Збираємо параметри та фільтруємо
+  const applyFilter = () => {
+    api.get('/positions/', {
+      params: {
+        ...(selectedDept && { department: selectedDept }),
+        ...(selectedNames.length > 0 && { name: selectedNames.join(',') }),
+      }
+    })
+    .then(res => onFilter(res.data))
+    .catch(err => console.error('Помилка фільтрації:', err));
   };
 
   return (
@@ -61,22 +69,41 @@ export default function FilterPopover({ onFilter }) {
       <Popover.Button className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-800 flex items-center">
         Фільтри <ChevronDownIcon className="w-4 h-4 ml-2" />
       </Popover.Button>
+      <Popover.Panel className="absolute right-0 z-20 mt-2 w-80 bg-white p-4 rounded-md shadow-lg border border-gray-300">
+        {/* Фільтр за відділом */}
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Відділ
+        </label>
+        <select
+          className="w-full p-2 border rounded mb-4"
+          value={selectedDept}
+          onChange={e => setSelectedDept(e.target.value)}
+        >
+          <option value="">Усі відділи</option>
+          {deptList.map(dep => (
+            <option key={dep.id} value={dep.id}>
+              {dep.name}
+            </option>
+          ))}
+        </select>
 
-      <Popover.Panel className="absolute right-0 z-20 mt-2 w-72 bg-white p-4 rounded-md shadow-lg border border-gray-300">
-        <label className="block text-sm mb-1 text-gray-700">Назва посади</label>
+        {/* Фільтр за назвою з автодоповненням */}
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Назва посади
+        </label>
         <input
           type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          value={nameQuery}
+          onChange={e => setNameQuery(e.target.value)}
           className="w-full p-2 border rounded mb-2"
+          placeholder="Почніть вводити..."
         />
-
         {suggestions.length > 0 && (
-          <ul className="bg-white max-h-40 overflow-y-auto border border-gray-300 rounded text-sm">
-            {suggestions.map((s, i) => (
+          <ul className="max-h-40 overflow-auto border rounded mb-2 text-sm">
+            {suggestions.map((s, idx) => (
               <li
-                key={i}
-                onClick={() => handleSelect(s.name)}
+                key={idx}
+                onClick={() => handleNameSelect(s.name)}
                 className="px-3 py-1 hover:bg-gray-100 cursor-pointer"
               >
                 {s.name}
@@ -85,19 +112,22 @@ export default function FilterPopover({ onFilter }) {
           </ul>
         )}
 
-        {selectedItems.length > 0 && (
-          <div className="mt-3 text-sm text-gray-800">
-            <span className="font-medium text-gray-600">Обрано:</span>
-            <ul className="mt-1 space-y-1">
-              {selectedItems.map((item, idx) => (
-                <li key={idx} className="flex items-center justify-between bg-gray-100 px-2 py-1 rounded">
-                  <span>{item}</span>
+        {/* Вибрані назви */}
+        {selectedNames.length > 0 && (
+          <div className="mb-3 text-sm text-gray-800">
+            <div className="font-medium text-gray-600 mb-1">Обрано назви:</div>
+            <ul className="space-y-1">
+              {selectedNames.map((name, i) => (
+                <li
+                  key={i}
+                  className="flex items-center justify-between bg-gray-100 px-2 py-1 rounded"
+                >
+                  <span>{name}</span>
                   <button
-                    onClick={() => handleRemove(idx)}
-                    className="text-red-500 text-xs ml-2 hover:underline"
-                    title="Видалити"
+                    onClick={() => handleRemoveName(i)}
+                    className="text-red-500 text-xs hover:underline"
                   >
-                    ✕
+                    ×
                   </button>
                 </li>
               ))}
@@ -106,14 +136,14 @@ export default function FilterPopover({ onFilter }) {
               onClick={handleClearAll}
               className="mt-2 text-xs text-blue-600 hover:underline"
             >
-              Очистити все
+              Очистити всі фільтри
             </button>
           </div>
         )}
 
         <button
-          onClick={handleFilterClick}
-          className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+          onClick={applyFilter}
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
         >
           Фільтрувати
         </button>

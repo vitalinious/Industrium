@@ -62,6 +62,7 @@ export default function Positions() {
             <tr className="border-b border-gray-700">
               <th className="px-2 py-2 w-4"></th>
               <th className="px-4 py-2">Назва посади</th>
+              <th className="px-4 py-2">Відділ</th>
               <th className="px-4 py-2 text-right">Дії</th>
             </tr>
           </thead>
@@ -72,6 +73,7 @@ export default function Positions() {
                   <input type="checkbox" />
                 </td>
                 <td className="px-4 py-3">{pos.name}</td>
+                <td className="px-4 py-3">{pos.department_name}</td>
                 <td className="px-4 py-3 text-right space-x-2">
                   <button
                     onClick={() => handleEdit(pos.id)}

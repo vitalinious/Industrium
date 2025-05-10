@@ -1,4 +1,3 @@
-// src/pages/department/employees/Employees.js
 import React, { useEffect, useState } from 'react';
 import api from '../../api';
 import { Edit2, X } from 'lucide-react';
@@ -11,6 +10,12 @@ export default function Employees() {
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');
   const navigate = useNavigate();
+
+  const formatPhone = num => {
+    const m = num.match(/^(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})$/);
+    if (!m) return num;
+    return `+${m[1]}(${m[2]})${m[3]}-${m[4]}-${m[5]}`;
+  };
 
   useEffect(() => {
     async function fetchEmployees() {
@@ -43,7 +48,6 @@ export default function Employees() {
 
   return (
     <div className="pb-3 space-y-4">
-      {/* Додавання / Фільтри */}
       <div className="p-3 bg-white shadow rounded flex justify-between mb-2">
         <button
           className="bg-gray-800 text-white hover:bg-blue-800 px-4 py-2 rounded"
@@ -51,22 +55,31 @@ export default function Employees() {
         >
           Додати
         </button>
-        <FilterPopover onFilter={setEmployees} />
+        <FilterPopover onFilter={data => setEmployees(data)} />
       </div>
 
-      {/* Таблиця */}
-      <div className="overflow-x-auto bg-white shadow rounded">
-        <table className="min-w-full text-left">
-          <thead>
+      <div className="overflow-x-auto overflow-y-scroll bg-white shadow rounded max-h-[70vh]">
+        <table className="table-fixed min-w-full text-left">
+          <colgroup>
+            <col className="w-4" />        {/* чекбокс */}
+            <col className="w-3/12" />     {/* ПІБ */}
+            <col className="w-1/12" />     {/* Email */}
+            <col className="w-2/12" />     {/* Телефон */}
+            <col className="w-1/12" />     {/* Відділ */}
+            <col className="w-3/12" />     {/* Посада */}
+            <col className="w-2/12" />     {/* Дата приєднання */}
+            <col className="w-24" />       {/* Дії */}
+          </colgroup>
+          <thead className="bg-white sticky top-0 z-10">
             <tr className="border-b border-gray-700">
-              <th className="px-2 py-2 w-4" />
+              <th className="px-2 py-2"></th>
               <th className="px-4 py-2">ПІБ</th>
               <th className="px-4 py-2">Email</th>
               <th className="px-4 py-2">Телефон</th>
               <th className="px-4 py-2">Відділ</th>
               <th className="px-4 py-2">Посада</th>
               <th className="px-4 py-2">Дата приєднання</th>
-              <th className="px-4 py-2 text-right">Дії</th>
+              <th className="px-4 py-2 text-right whitespace-nowrap">Дії</th>
             </tr>
           </thead>
           <tbody>
@@ -75,21 +88,13 @@ export default function Employees() {
                 <td className="px-4 py-3">
                   <input type="checkbox" />
                 </td>
-
-                <td className="px-4 py-3">
-                  {`${emp.last_name} ${emp.first_name} ${emp.middle_name || ''}`.trim()}
-                </td>
-
+                <td className="px-4 py-3">{emp.full_name}</td>
                 <td className="px-4 py-3">{emp.email}</td>
-                <td className="px-4 py-3">{emp.phone_number}</td>
-                <td className="px-4 py-3">{emp.department}</td>
-                <td className="px-4 py-3">{emp.position}</td>
-                <td className="px-4 py-3">
-                  {new Date(emp.date_joined).toLocaleDateString()}
-                </td>
-
-                {/* Кнопки */}
-                <td className="px-4 py-3 text-right space-x-2">
+                <td className="px-4 py-3">{formatPhone(emp.phone_number)}</td>
+                <td className="px-4 py-3">{emp.department_name}</td>
+                <td className="px-4 py-3">{emp.position_name}</td>
+                <td className="px-4 py-3">{emp.date_joined}</td>
+                <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
                   <button
                     onClick={() => handleEdit(emp.id)}
                     title="Редагувати"
@@ -100,8 +105,8 @@ export default function Employees() {
                   <button
                     onClick={() => deleteItem(emp.id)}
                     disabled={isLoading}
-                    title="Видалити"
                     className="p-1 hover:bg-red-50 rounded"
+                    title="Видалити"
                   >
                     <X size={16} className="text-red-500 hover:text-red-700" />
                   </button>

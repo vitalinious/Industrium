@@ -32,10 +32,24 @@ export default function CreateDepartment() {
             className="w-full px-4 py-2 border rounded"
           />
         </div>
-        {error && <p className="text-red-500">{error}</p>}
-        <button type="submit" className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-800">
-          Зберегти
-        </button>
+            {error && (
+              <p className="text-red-500 text-sm">{error}</p>
+            )}
+            <div className="flex space-x-4">
+              <button
+                type="submit"
+                className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-800"
+              >
+                Зберегти
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/department/departments')}
+                className="px-4 py-2 border rounded hover:bg-gray-100"
+              >
+                Скасувати
+              </button>
+            </div>
       </form>
     </div>
   );
