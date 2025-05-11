@@ -48,7 +48,7 @@ export default function Positions() {
     <div className="pb-3 space-y-4">
       <div className="p-3 bg-white shadow rounded flex justify-between mb-2">
         <button
-          className="bg-gray-800 text-white hover:bg-blue-800 px-4 py-2 rounded"
+          className="bg-green-800 text-white hover:bg-green-600 px-4 py-2 rounded"
           onClick={() => navigate('/department/positions/add')}
         >
           Додати
@@ -56,14 +56,20 @@ export default function Positions() {
         <FilterPopover onFilter={(filteredData) => setPositions(filteredData)} />
       </div>
 
-      <div className="overflow-x-auto bg-white shadow rounded">
-        <table className="min-w-full text-left">
-          <thead>
+      <div className="overflow-x-auto overflow-y-scroll bg-white shadow rounded max-h-[70vh]">
+        <table className="table-fixed min-w-full text-left">
+          <colgroup>
+            <col className="w-4" />        {/* чекбокс */}
+            <col className="w-4/8" />      {/* Назва посади */}
+            <col className="w-1/8" />      {/* Відділ */}
+            <col className="w-24" />       {/* Дії */}
+          </colgroup>
+          <thead className="bg-white sticky top-0 z-10">
             <tr className="border-b border-gray-700">
-              <th className="px-2 py-2 w-4"></th>
+              <th className="px-2 py-2"></th>
               <th className="px-4 py-2">Назва посади</th>
               <th className="px-4 py-2">Відділ</th>
-              <th className="px-4 py-2 text-right">Дії</th>
+              <th className="px-4 py-2 text-right whitespace-nowrap">Дії</th>
             </tr>
           </thead>
           <tbody>

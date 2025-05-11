@@ -47,7 +47,7 @@ export default function Departments() {
     <div className="pb-3 space-y-4">
       <div className="p-3 bg-white shadow rounded flex justify-between mb-2">
         <button
-          className="bg-gray-800 text-white hover:bg-blue-800 px-4 py-2 rounded"
+          className="bg-green-800 text-white hover:bg-green-600 px-4 py-2 rounded"
           onClick={() => navigate('/department/departments/add')}
         >
           Додати

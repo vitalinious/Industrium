@@ -4,38 +4,56 @@ const api = axios.create({
   baseURL: 'http://localhost:8000/api',
 });
 
-api.interceptors.request.use(async config => {
-  const token = localStorage.getItem('access_token');
-  config.headers.Authorization = `Bearer ${token}`;
+// Додаємо access_token в кожен запит
+api.interceptors.request.use(config => {
+  const access = localStorage.getItem('access_token');
+  if (access) {
+    config.headers.Authorization = `Bearer ${access}`;
+  }
   return config;
 });
 
+// Інтерцептор для обробки 401 і автоматичного refresh
 api.interceptors.response.use(
-  res => res,
-  async err => {
-    const originalRequest = err.config;
-    const refreshToken = localStorage.getItem('refresh_token');
+  response => response,
+  async error => {
+    const originalRequest = error.config;
 
-    if (err.response?.status === 401 && refreshToken && !originalRequest._retry) {
+    // Якщо 401, є refresh_token і ми ще не робили retry
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
+      const refresh = localStorage.getItem('refresh_token');
 
-      try {
-        const response = await axios.post('/api/token/refresh/', {
-          refresh: refreshToken
-        });
+      if (refresh) {
+        try {
+          // Оновлюємо access
+          const { data } = await axios.post(
+            'http://localhost:8000/api/token/refresh/',
+            { refresh }
+          );
 
-        const newAccessToken = response.data.access;
-        localStorage.setItem('access_token', newAccessToken);
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          // Зберігаємо новий
+          localStorage.setItem('access_token', data.access);
 
-        return api(originalRequest);
-      } catch (e) {
-        localStorage.clear();
-        window.location.href = '/login';
+          // Оновлюємо заголовки
+          api.defaults.headers.common.Authorization = `Bearer ${data.access}`;
+          originalRequest.headers.Authorization = `Bearer ${data.access}`;
+
+          // Повторюємо початковий запит
+          return api(originalRequest);
+        } catch (refreshError) {
+          console.error('Не вдалось оновити токен:', refreshError);
+          localStorage.clear();
+          window.location.href = '/login';
+          return Promise.reject(refreshError);
+        }
       }
     }
 
-    return Promise.reject(err);
+    return Promise.reject(error);
   }
 );
 

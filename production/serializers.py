@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from .models import Position, Department
+from .models import Position, Department, Project
 from django.contrib.auth import get_user_model
 import random
 import string
@@ -113,3 +113,19 @@ class EmployeeSerializer(serializers.ModelSerializer):
             data['username'] = self._generated_username
             data['password'] = self._generated_password
         return data
+    
+class ProjectSerializer(serializers.ModelSerializer):
+    department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all())
+    department_name = serializers.CharField(source='department.name', read_only=True)
+    # Додаємо поле для отримання підписаного статусу
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = Project
+        fields = [
+            'id', 'name', 'description',
+            'department', 'department_name',
+            'start_date', 'end_date',
+            'status', 'status_display',
+        ]
+        read_only_fields = ['id', 'department_name', 'status_display']

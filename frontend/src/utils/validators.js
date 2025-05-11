@@ -6,23 +6,20 @@ export const nameRegex = /^[A-Za-zА-Яа-яЇїІіЄєҐґ'\-\s]+$/;
 /**
  * Перевіряє, що рядок не порожній.
  * @param {string} value
- * @returns {string|null} Помилка або null
+ * @returns {string|null}
  */
 export function validateNotEmpty(value) {
-  return value.trim()
-    ? null
-    : 'Поле не може бути порожнім';
+  return value && value.trim() ? null : 'Поле не може бути порожнім';
 }
 
 /**
  * Перевіряє ім’я/прізвище/по-батькові.
  * @param {string} value
- * @returns {string|null} Помилка або null
+ * @returns {string|null}
  */
 export function validateName(value) {
-  if (!value.trim()) {
-    return 'Поле не може бути порожнім';
-  }
+  const emptyErr = validateNotEmpty(value);
+  if (emptyErr) return emptyErr;
   if (!nameRegex.test(value)) {
     return 'Допустимі лише літери, пробіли, апострофи та дефіси';
   }
@@ -32,27 +29,34 @@ export function validateName(value) {
 /**
  * Перевіряє формат email.
  * @param {string} value
- * @returns {string|null} Помилка або null
+ * @returns {string|null}
  */
 export function validateEmail(value) {
+  const emptyErr = validateNotEmpty(value);
+  if (emptyErr) return emptyErr;
   const re = /^\S+@\S+\.\S+$/;
-  if (!value.trim()) {
-    return 'Поле не може бути порожнім';
-  }
-  if (!re.test(value)) {
-    return 'Невірний формат email';
+  return re.test(value) ? null : 'Невірний формат email';
+}
+
+/**
+ * Перевіряє повноту номера +380 (99) 999-99-99.
+ * @param {string} value
+ * @returns {string|null}
+ */
+export function validatePhone(value) {
+  const digits = value.replace(/\D/g, '');
+  if (!digits || digits.length < 12 || value.includes('_')) {
+    return 'Введіть повний номер телефону';
   }
   return null;
 }
 
 /**
- * Перевіряє повноту заповнення маски +380 (99) 999-99-99.
- * @param {string} value
- * @returns {string|null} Помилка або null
+ * Перевіряє, що селект має значення
+ * @param {string|number} value
+ * @param {string} [message]
+ * @returns {string|null}
  */
-export function validatePhone(value) {
-  if (value.includes('_') || value.replace(/\D/g, '').length < 12) {
-    return 'Введіть повний номер телефону';
-  }
-  return null;
+export function validateSelect(value, message = 'Будь ласка, оберіть значення') {
+  return value ? null : message;
 }

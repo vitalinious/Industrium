@@ -1,9 +1,10 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout     from './layout/Layout';
-import Login      from './login';
-import Account    from './account';
-import Dashboard  from './Dashboard';
+
+import Layout            from      './layout/Layout';
+import Login             from      './login';
+import Account           from      './account';
+import Dashboard         from      './Dashboard';
 
 import Positions         from      './department/positions/positions';
 import CreatePosition    from      './department/positions/add';
@@ -16,6 +17,10 @@ import EditDepartment    from      './department/departments/edit';
 import Employees         from      './department/employees/employees';
 import CreateEmployee    from      './department/employees/add';
 import EditEmployee      from      './department/employees/edit';
+
+import Projects          from      './project/projects/projects'
+import CreateProject     from      './project/projects/add'
+import EditProject       from      './project/projects/edit'
 
 export default function App() {
   return (
@@ -37,9 +42,13 @@ export default function App() {
           <Route path="department/departments/add"        element={<CreateDepartment />} />
           <Route path="department/departments/edit/:id"   element={<EditDepartment />} />
 
-          <Route path="department/employees"             element={<Employees />} />
-          <Route path="department/employees/add"         element={<CreateEmployee />} />
-          <Route path="department/employees/edit/:id"    element={<EditEmployee />} />
+          <Route path="department/employees"              element={<Employees />} />
+          <Route path="department/employees/add"          element={<CreateEmployee />} />
+          <Route path="department/employees/edit/:id"     element={<EditEmployee />} />
+
+          <Route path="project/projects"              element={<Projects />} />
+          <Route path="project/projects/add"          element={<CreateProject />} />
+          <Route path="project/projects/edit/:id"     element={<EditProject />} />
         </Route>
 
         {/* Усі інші шляхи редіректять на логін */}

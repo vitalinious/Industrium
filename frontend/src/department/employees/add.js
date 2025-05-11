@@ -12,23 +12,19 @@ import {
 export default function CreateEmployee() {
   const navigate = useNavigate();
 
-  // form fields
-  const [lastName, setLastName]       = useState('');
-  const [firstName, setFirstName]     = useState('');
-  const [middleName, setMiddleName]   = useState('');
-  const [email, setEmail]             = useState('');
-  const [phone, setPhone]             = useState('');
+  const [lastName, setLastName]           = useState('');
+  const [firstName, setFirstName]         = useState('');
+  const [middleName, setMiddleName]       = useState('');
+  const [email, setEmail]                 = useState('');
+  const [phone, setPhone]                 = useState('');
 
-  // selects
-  const [departmentId, setDepartmentId] = useState('');
-  const [positionId, setPositionId]     = useState('');
-  const [role, setRole]                 = useState('Worker');
+  const [departmentId, setDepartmentId]   = useState('');
+  const [positionId, setPositionId]       = useState('');
+  const [role, setRole]                   = useState('Worker');
 
-  // options
-  const [departments, setDepartments] = useState([]);
-  const [positions, setPositions]     = useState([]);
+  const [departments, setDepartments]     = useState([]);
+  const [positions, setPositions]         = useState([]);
 
-  // errors
   const [lastNameErr,   setLastNameErr]   = useState(null);
   const [firstNameErr,  setFirstNameErr]  = useState(null);
   const [middleNameErr, setMiddleNameErr] = useState(null);
@@ -36,18 +32,15 @@ export default function CreateEmployee() {
   const [phoneErr,      setPhoneErr]      = useState(null);
   const [submitErr,     setSubmitErr]     = useState(null);
 
-  // custom required-message handlers
   const attachRequiredMsg = e => e.target.setCustomValidity('Будь ласка, заповніть це поле');
   const clearRequiredMsg  = e => e.target.setCustomValidity('');
 
-  // load departments
   useEffect(() => {
     api.get('/departments/')
       .then(res => setDepartments(res.data))
       .catch(() => setDepartments([]));
   }, []);
 
-  // load positions when department changes
   useEffect(() => {
     if (!departmentId) {
       setPositions([]);
@@ -62,7 +55,6 @@ export default function CreateEmployee() {
   const handleSubmit = async e => {
     e.preventDefault();
 
-    // validate all fields
     const ln = validateName(lastName);
     const fn = validateName(firstName);
     const mn = middleName ? validateName(middleName) : null;
@@ -77,7 +69,7 @@ export default function CreateEmployee() {
     setSubmitErr(null);
 
     if (ln || fn || mn || em || ph) {
-      return; // don't submit if any error
+      return;
     }
 
     try {

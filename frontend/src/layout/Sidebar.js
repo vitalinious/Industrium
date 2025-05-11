@@ -23,11 +23,10 @@ export default function Sidebar() {
     {
       label: 'Проєкти',
       icon: FolderIcon,
-      to: '/projects',
+      to: '/project',
       children: [
-        { label: 'Усі проєкти', to: '/projects/all' },
-        { label: 'Мої проєкти', to: '/projects/mine' },
-        { label: 'Архівовані', to: '/projects/archived' },
+        { label: 'Усі проєкти', to: '/project/projects' },
+        { label: 'Мої проєкти', to: '/project/mine' },
       ]
     },
     {
