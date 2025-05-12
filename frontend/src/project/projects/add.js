@@ -38,6 +38,11 @@ export default function CreateProject() {
       .catch(() => setDepartments([]));
   }, []);
 
+  const formatDateLocal = (date) => {
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return local.toISOString().split('T')[0];
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
 
@@ -69,14 +74,18 @@ export default function CreateProject() {
     }
     if (!valid) return;
 
+    // форматування дат без UTC-зсуву
+    const formattedStartDate = formatDateLocal(startDate);
+    const formattedEndDate = endDate ? formatDateLocal(endDate) : null;
+
     // відправка даних
     try {
       const payload = {
         name:        name.trim(),
         description: description.trim(),
         department:  departmentId,
-        start_date:  startDate.toISOString().slice(0,10),
-        end_date:    endDate ? endDate.toISOString().slice(0,10) : null,
+        start_date:  formattedStartDate,
+        end_date:    formattedEndDate,
       };
       await api.post('/projects/', payload);
       navigate('/project/projects');

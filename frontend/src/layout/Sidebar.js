@@ -32,11 +32,9 @@ export default function Sidebar() {
     {
       label: 'Завдання',
       icon: ClipboardDocumentIcon,
-      to: '/tasks',
+      to: '/task',
       children: [
-        { label: 'Нові', to: '/tasks/new' },
-        { label: 'В роботі', to: '/tasks/in-progress' },
-        { label: 'Завершені', to: '/tasks/done' },
+        { label: 'Перегляд', to: '/task/tasks' },
       ]
     },
     {
@@ -53,6 +51,7 @@ export default function Sidebar() {
       icon: UserGroupIcon,
       to: '/department',
       children: [
+        { label: 'Мій аккаунт', to: '/department/account' },
         { label: 'Співробітники', to: '/department/employees' },
         { label: 'Відділи', to: '/department/departments' },
         { label: 'Посади', to: '/department/positions' },

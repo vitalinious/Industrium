@@ -50,7 +50,7 @@ export default function Employees() {
     <div className="pb-3 space-y-4">
       <div className="p-3 bg-white shadow rounded flex justify-between mb-2">
         <button
-          className="bg-green-800 text-white hover:bg-green-600 px-4 py-2 rounded"
+          className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
           onClick={() => navigate('/department/employees/add')}
         >
           Додати

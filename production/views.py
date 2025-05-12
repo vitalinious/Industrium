@@ -122,6 +122,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
             sts = [s.strip() for s in status_param.split(',') if s.strip()]
             qs = qs.filter(status__in=sts)
 
+        ids = params.get('ids')
+        if ids:
+            id_list = [int(i) for i in ids.split(',') if i.isdigit()]
+            qs = qs.filter(id__in=id_list)
+
+        start_from = params.get('start_from')
+        if start_from:
+            qs = qs.filter(start_date__gte=start_from)
+
+        start_to = params.get('start_to')
+        if start_to:
+            qs = qs.filter(start_date__lte=start_to)
+
         return qs
 
 
@@ -162,3 +175,14 @@ def suggest_employees(request):
         ]
         return Response(data)
     return Response([])
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def suggest_project(request):
+    q = request.query_params.get('name', '').strip()
+    if not q:
+        return Response([])
+
+    matches = Project.objects.filter(name__icontains=q)[:10]
+    return Response([{'id': p.id, 'name': p.name} for p in matches])

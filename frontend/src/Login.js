@@ -23,7 +23,7 @@ export default function Login() {
       localStorage.setItem('access_token', data.access);
       localStorage.setItem('refresh_token', data.refresh);
   
-      navigate('/account');
+      navigate('/department/account');
     } catch (err) {
       setError('Невірний логін або пароль');
     }

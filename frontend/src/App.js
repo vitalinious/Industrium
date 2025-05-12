@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import Layout            from      './layout/Layout';
 import Login             from      './login';
-import Account           from      './account';
+import Account           from      './department/account';
 import Dashboard         from      './Dashboard';
 
 import Positions         from      './department/positions/positions';
@@ -22,6 +22,10 @@ import Projects          from      './project/projects/projects'
 import CreateProject     from      './project/projects/add'
 import EditProject       from      './project/projects/edit'
 
+import Tasks          from         './task/tasks/tasks'
+import CreateTask     from         './project/projects/add'
+import EditTask      from          './project/projects/edit'
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -32,7 +36,7 @@ export default function App() {
         {/* Захищені сторінки під Layout */}
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
-          <Route path="account" element={<Account />} />
+          <Route path="department/account"                element={<Account />} />
           
           <Route path="department/positions"              element={<Positions />} />
           <Route path="department/positions/add"          element={<CreatePosition />} />
@@ -46,9 +50,13 @@ export default function App() {
           <Route path="department/employees/add"          element={<CreateEmployee />} />
           <Route path="department/employees/edit/:id"     element={<EditEmployee />} />
 
-          <Route path="project/projects"              element={<Projects />} />
-          <Route path="project/projects/add"          element={<CreateProject />} />
-          <Route path="project/projects/edit/:id"     element={<EditProject />} />
+          <Route path="project/projects"                  element={<Projects />} />
+          <Route path="project/projects/add"              element={<CreateProject />} />
+          <Route path="project/projects/edit/:id"         element={<EditProject />} />
+
+          <Route path="task/tasks"                        element={<Tasks />} />
+          <Route path="task/tasks/add"                    element={<CreateTask />} />
+          <Route path="task/tasks/edit/:id"               element={<EditTask />} />
         </Route>
 
         {/* Усі інші шляхи редіректять на логін */}
