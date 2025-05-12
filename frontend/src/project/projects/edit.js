@@ -12,42 +12,27 @@ export default function EditProject() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [name, setName]               = useState('');
+  const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [departmentId, setDepartmentId] = useState('');
-  const [startDate, setStartDate]     = useState(null);
-  const [endDate, setEndDate]         = useState(null);
-
-  const [departments, setDepartments] = useState([]);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const [errors, setErrors] = useState({
     name: null,
-    department: null,
     startDate: null,
     endDate: null,
     submit: null
   });
-
-  const attachRequiredMsg = e => e.target.setCustomValidity('Будь ласка, заповніть це поле');
-  const clearRequiredMsg  = e => e.target.setCustomValidity('');
-
-  useEffect(() => {
-    api.get('/departments/')
-      .then(res => setDepartments(res.data))
-      .catch(() => setDepartments([]));
-  }, []);
 
   useEffect(() => {
     api.get(`/projects/${id}/`)
       .then(({ data }) => {
         setName(data.name);
         setDescription(data.description);
-        setDepartmentId(data.department);
         setStartDate(new Date(data.start_date));
         if (data.end_date) setEndDate(new Date(data.end_date));
       })
-      .catch(err => {
-        console.error(err);
+      .catch(() => {
         setErrors(e => ({ ...e, submit: 'Не вдалося завантажити дані проєкту' }));
       });
   }, [id]);
@@ -57,7 +42,6 @@ export default function EditProject() {
 
     const newErrors = {
       name: validateNotEmpty(name),
-      department: departmentId ? null : 'Оберіть відділ',
       startDate: startDate ? null : 'Оберіть дату початку',
       endDate: null,
       submit: null
@@ -79,7 +63,6 @@ export default function EditProject() {
     const payload = {
       name: name.trim(),
       description: description.trim(),
-      department: departmentId,
       start_date: formatDateLocal(startDate),
       end_date: endDate ? formatDateLocal(endDate) : null
     };
@@ -88,7 +71,6 @@ export default function EditProject() {
       await api.put(`/projects/${id}/`, payload);
       navigate('/project/projects');
     } catch (err) {
-      console.error(err);
       if (err.response?.status === 400) {
         const msg = Object.entries(err.response.data)
           .map(([f, msgs]) => `${f}: ${msgs.join(' ')}`)
@@ -110,8 +92,8 @@ export default function EditProject() {
             <input
               type="text"
               required
-              onInvalid={attachRequiredMsg}
-              onInput={clearRequiredMsg}
+              onInvalid={e => e.target.setCustomValidity('Будь ласка, заповніть це поле')}
+              onInput={e => e.target.setCustomValidity('')}
               className="w-full border px-3 py-2 rounded"
               value={name}
               onChange={e => setName(e.target.value)}
@@ -133,24 +115,6 @@ export default function EditProject() {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm mb-1">Відділ <span className="text-red-500">*</span></label>
-            <select
-              required
-              onInvalid={attachRequiredMsg}
-              onInput={clearRequiredMsg}
-              className="w-full border px-3 py-2 rounded"
-              value={departmentId}
-              onChange={e => setDepartmentId(e.target.value)}
-            >
-              <option value="">Оберіть відділ</option>
-              {departments.map(dep => (
-                <option key={dep.id} value={dep.id}>{dep.name}</option>
-              ))}
-            </select>
-            {errors.department && <p className="text-red-500 text-sm mt-1">{errors.department}</p>}
-          </div>
-
-          <div>
             <label className="block text-sm mb-1">Дата початку <span className="text-red-500">*</span></label>
             <DatePicker
               locale="uk"
@@ -160,8 +124,6 @@ export default function EditProject() {
               placeholderText="дд.мм.рррр"
               className="w-full border px-3 py-2 rounded"
               required
-              onInvalid={attachRequiredMsg}
-              onInput={clearRequiredMsg}
             />
             {errors.startDate && <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>}
           </div>

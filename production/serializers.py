@@ -1,19 +1,22 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
-from .models import Position, Department, Project
 from django.contrib.auth import get_user_model
+from .models import Position, Department, Project, Attachment, ProjectComment, Task
+
 import random
 import string
 
 User = get_user_model()
 
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        token['role'] = user.role  # 👈 Додаємо роль до токена
+        token['role'] = user.role
         return token
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     position = serializers.StringRelatedField()
@@ -25,48 +28,48 @@ class ProfileSerializer(serializers.ModelSerializer):
             'middle_name', 'phone_number', 'position', 'date_joined'
         ]
 
+
 class PositionSerializer(serializers.ModelSerializer):
-    department = serializers.PrimaryKeyRelatedField(
-        queryset=Department.objects.all()
-    )
-    department_name = serializers.CharField(
-        source='department.name',
-        read_only=True
-    )
+    department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all())
+    department_name = serializers.CharField(source='department.name', read_only=True)
 
     class Meta:
         model = Position
         fields = ['id', 'name', 'department', 'department_name']
         read_only_fields = ['id']
-        
+
+
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
         fields = ['id', 'name']
-        
+
+
 class EmployeeSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
     username = serializers.CharField(read_only=True)
 
     department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all())
-    position   = serializers.PrimaryKeyRelatedField(queryset=Position.objects.all())
+    position = serializers.PrimaryKeyRelatedField(queryset=Position.objects.all())
     department_name = serializers.CharField(source='department.name', read_only=True)
-    position_name   = serializers.CharField(source='position.name',   read_only=True)
+    position_name = serializers.CharField(source='position.name', read_only=True)
     full_name = serializers.SerializerMethodField()
     date_joined = serializers.DateTimeField(format='%d.%m.%Y', read_only=True)
 
     class Meta:
         model = User
         fields = [
-            'id','username','password',
-            'first_name','last_name','middle_name','full_name',
-            'email','phone_number',
-            'department','department_name',
-            'position','position_name',
-            'role','date_joined',
+            'id', 'username', 'password',
+            'first_name', 'last_name', 'middle_name', 'full_name',
+            'email', 'phone_number',
+            'department', 'department_name',
+            'position', 'position_name',
+            'role', 'date_joined',
         ]
-        read_only_fields = ['id','username','date_joined',
-                            'department_name','position_name','full_name']
+        read_only_fields = [
+            'id', 'username', 'date_joined',
+            'department_name', 'position_name', 'full_name'
+        ]
 
     def get_full_name(self, obj):
         return ' '.join(filter(None, [obj.last_name, obj.first_name, obj.middle_name]))
@@ -76,7 +79,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
         if not pwd:
             pwd = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
 
-        email = validated_data.get('email','')
+        email = validated_data.get('email', '')
         local = email.split('@')[0]
         suffix = ''.join(random.choices(string.digits, k=3))
         uname = f"{local}#{suffix}"
@@ -95,19 +98,80 @@ class EmployeeSerializer(serializers.ModelSerializer):
             data['username'] = self._generated_username
             data['password'] = self._generated_password
         return data
-    
-class ProjectSerializer(serializers.ModelSerializer):
-    department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all())
-    department_name = serializers.CharField(source='department.name', read_only=True)
-    # Додаємо поле для отримання підписаного статусу
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    creator_name = serializers.SerializerMethodField()
+    assignee_name = serializers.SerializerMethodField()
+    project_name = serializers.CharField(source='project.name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = Task
+        fields = [
+            'id', 'title', 'description',
+            'creator', 'creator_name',
+            'assignee', 'assignee_name',
+            'project', 'project_name',
+            'order','priority',
+            'status', 'status_display',
+            'created_at', 'due_date',
+        ]
+        read_only_fields = ['creator', 'creator_name', 'status_display', 'project_name', 'assignee_name', 'created_at']
+
+    def get_creator_name(self, obj):
+        return f"{obj.creator.last_name} {obj.creator.first_name}"
+
+    def get_assignee_name(self, obj):
+        return f"{obj.assignee.last_name} {obj.assignee.first_name}" if obj.assignee else None
+    
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)
+
+
+class ProjectCommentSerializer(serializers.ModelSerializer):
+    author_name = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField(format="%d.%m.%Y %H:%M", read_only=True)
+
+    class Meta:
+        model = ProjectComment
+        fields = ['id', 'project', 'author', 'author_name', 'content', 'created_at']
+        read_only_fields = ['id', 'author', 'author_name', 'created_at']
+
+    def get_author_name(self, obj):
+        return f"{obj.author.last_name} {obj.author.first_name}"
+
+
+class AttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attachment
+        fields = '__all__'
+        read_only_fields = ['uploaded_at', 'uploaded_by']
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    last_modified_by_name = serializers.SerializerMethodField()
+    last_modified_at = serializers.DateTimeField(format="%d.%m.%Y %H:%M", read_only=True)
+    tasks = TaskSerializer(many=True, read_only=True)
+    comments = ProjectCommentSerializer(many=True, read_only=True)
+    files = AttachmentSerializer(many=True, read_only=True, source='attachment_set')
 
     class Meta:
         model = Project
         fields = [
             'id', 'name', 'description',
-            'department', 'department_name',
             'start_date', 'end_date',
             'status', 'status_display',
+            'last_modified_by_name', 'last_modified_at',
+            'tasks', 'comments', 'files'
         ]
-        read_only_fields = ['id', 'department_name', 'status_display']
+        read_only_fields = [
+            'id', 'status_display', 'last_modified_by_name',
+            'last_modified_at', 'tasks', 'comments', 'files'
+        ]
+
+    def get_last_modified_by_name(self, obj):
+        if obj.last_modified_by:
+            return f"{obj.last_modified_by.last_name} {obj.last_modified_by.first_name}"
+        return None

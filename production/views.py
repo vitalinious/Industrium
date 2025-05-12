@@ -11,10 +11,12 @@ from .serializers import CustomTokenObtainPairSerializer
 from .serializers import (
     ProfileSerializer,
     PositionSerializer, DepartmentSerializer,
-    EmployeeSerializer, ProjectSerializer
+    EmployeeSerializer, ProjectSerializer,
+    TaskSerializer, ProjectCommentSerializer,
+    AttachmentSerializer
 )
 
-from .models import Position, Department, Project
+from .models import Position, Department, Project, Task, ProjectComment, Attachment
 from .permissions import IsManagerOrReadOnly
 from django.contrib.auth import get_user_model
 
@@ -129,6 +131,70 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         return qs
 
+    def perform_create(self, serializer):
+        serializer.save(last_modified_by=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(last_modified_by=self.request.user)
+
+
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    permission_classes = [IsAuthenticated, IsManagerOrReadOnly]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        params = self.request.query_params
+
+        project = params.get('project')
+        if project:
+            qs = qs.filter(project_id=project)
+
+        order = params.get('order')
+        if order:
+            qs = qs.filter(order_id=order)
+
+        status_param = params.get('status')
+        if status_param:
+            qs = qs.filter(status__in=[s.strip() for s in status_param.split(',')])
+
+        assignee = params.get('assignee')
+        if assignee:
+            qs = qs.filter(assignee_id=assignee)
+
+        priority = params.get('priority')
+        if priority:
+            qs = qs.filter(priority=priority)
+
+        created_from = params.get('created_from')
+        if created_from:
+            qs = qs.filter(created_at__date__gte=created_from)
+
+        created_to = params.get('created_to')
+        if created_to:
+            qs = qs.filter(created_at__date__lte=created_to)
+
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)
+        
+class ProjectCommentViewSet(viewsets.ModelViewSet):
+    queryset = ProjectComment.objects.all()
+    serializer_class = ProjectCommentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+class AttachmentViewSet(viewsets.ModelViewSet):
+    queryset = Attachment.objects.all()
+    serializer_class = AttachmentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(uploaded_by=self.request.user)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -177,3 +243,17 @@ def suggest_project(request):
         return Response([])
     matches = Project.objects.filter(name__icontains=q)[:10]
     return Response([{'id': p.id, 'name': p.name} for p in matches])
+
+@api_view(['GET'])
+def suggest_employees_filtered(request):
+    dept = request.GET.get('department')
+    pos  = request.GET.get('position')
+
+    qs = User.objects.all()
+    if dept:
+        qs = qs.filter(department_id=dept)
+    if pos:
+        qs = qs.filter(position_id=pos)
+
+    data = [{'id': u.id, 'name': f"{u.last_name} {u.first_name}"} for u in qs]
+    return Response(data)

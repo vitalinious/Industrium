@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState} from 'react';
 import api from '../../api';
 import { Edit2, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import FilterPopover from './filter';
+import { useNavigate, useLocation } from 'react-router-dom';
+import FilterPopover from '../filter';
 import useDeleteItem from '../../hooks/useDeleteItem';
 
 export default function Tasks() {
@@ -10,8 +10,12 @@ export default function Tasks() {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const formatDate = d => new Date(d).toLocaleDateString('uk-UA');
+  const formatDate = d => {
+    const parsed = new Date(d);
+    return isNaN(parsed) ? '—' : parsed.toLocaleDateString('uk-UA');
+  };
 
   useEffect(() => {
     (async () => {
@@ -74,7 +78,11 @@ export default function Tasks() {
           </thead>
           <tbody>
             {tasks.map(task => (
-              <tr key={task.id} className="border-b hover:bg-gray-100">
+              <tr
+                key={task.id}
+                className="border-b hover:bg-gray-100 cursor-pointer"
+                onClick={() => navigate(`/task/tasks/${task.id}`, { state: { from: location.pathname } })}
+              >
                 <td className="px-4 py-3">{task.title}</td>
                 <td className="px-4 py-3">{task.project_name || '—'}</td>
                 <td className="px-4 py-3">{task.assignee_name}</td>

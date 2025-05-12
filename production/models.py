@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from datetime import date
+from django.utils import timezone
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 # === Довідкові таблиці ===
 class Department(models.Model):
@@ -52,10 +55,12 @@ class Project(models.Model):
     ]
     name = models.CharField(max_length=200, db_index=True)
     description = models.TextField(blank=True)
-    department = models.ForeignKey(Department, on_delete=models.PROTECT, related_name='projects')
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Planned', db_index=True)
+    last_modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='modified_projects')
+    last_modified_at = models.DateTimeField(auto_now=True)
+    
 
     def save(self, *args, **kwargs):
         if not self.status or self._status_auto():
@@ -143,15 +148,13 @@ class Task(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.status or self._status_auto():
-            today = date.today()
+            today = timezone.now().date()
             if self.due_date and self.due_date < today:
                 self.status = 'Completed'
-            elif self.created_at.date() <= today:
-                self.status = 'InProgress'
             else:
-                self.status = 'Planned'
+                self.status = 'InProgress'
         super().save(*args, **kwargs)
-
+        
     def _status_auto(self):
         if not self.pk:
             return True
@@ -161,6 +164,23 @@ class Task(models.Model):
     def __str__(self):
         return self.title
 
+class ProjectComment(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+ 
+class Attachment(models.Model):
+    file = models.FileField(upload_to='attachments/')
+    description = models.CharField(max_length=255, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+
+    # Generic relation
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+       
 # === Матеріали та товари ===
 class Material(models.Model):
     name = models.CharField(max_length=200, unique=True)

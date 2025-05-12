@@ -53,7 +53,7 @@ export default function Employees() {
 
   return (
     <div className="pb-3 space-y-4">
-      <div className="p-3 bg-white shadow rounded flex items-center gap-4 mb-2">
+      <div className="p-3 bg-white shadow rounded flex justify-between items-center mb-2">
         {role === 'Manager' && (
           <button
             className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
@@ -62,24 +62,24 @@ export default function Employees() {
             Додати
           </button>
         )}
-        <FilterPopover onFilter={data => setEmployees(data)} />
+        <div className="ml-auto">
+          <FilterPopover onFilter={data => setEmployees(data)} />
+        </div>
       </div>
 
       <div className="overflow-x-auto overflow-y-scroll bg-white shadow rounded max-h-[70vh]">
         <table className="table-fixed min-w-full text-left">
           <colgroup>
-            <col className="w-4" />
             <col className="w-3/12" />
             <col className="w-1/12" />
             <col className="w-2/12" />
-            <col className="w-1/12" />
+            <col className="w-2/12" />
             <col className="w-3/12" />
             <col className="w-2/12" />
             {role === 'Manager' && <col className="w-24" />}
           </colgroup>
           <thead className="bg-white sticky top-0 z-10">
             <tr className="border-b border-gray-700">
-              <th className="px-2 py-2"></th>
               <th className="px-4 py-2">ПІБ</th>
               <th className="px-4 py-2">Email</th>
               <th className="px-4 py-2">Телефон</th>
@@ -94,9 +94,6 @@ export default function Employees() {
           <tbody>
             {employees.map(emp => (
               <tr key={emp.id} className="border-b border-gray-700 hover:bg-gray-300">
-                <td className="px-4 py-3">
-                  <input type="checkbox" />
-                </td>
                 <td className="px-4 py-3">{emp.full_name}</td>
                 <td className="px-4 py-3">{emp.email}</td>
                 <td className="px-4 py-3">{formatPhone(emp.phone_number)}</td>

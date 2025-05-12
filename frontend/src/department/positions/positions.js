@@ -4,12 +4,14 @@ import { Edit2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FilterPopover from './filter';
 import useDeleteItem from '../../hooks/useDeleteItem';
+import useUserRole from '../../hooks/useUserRole';
 
 export default function Positions() {
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const role = useUserRole();
 
   useEffect(() => {
     async function fetchPositions() {
@@ -46,30 +48,36 @@ export default function Positions() {
 
   return (
     <div className="pb-3 space-y-4">
-      <div className="p-3 bg-white shadow rounded flex justify-between mb-2">
-        <button
-          className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
-          onClick={() => navigate('/department/positions/add')}
-        >
-          Додати
-        </button>
-        <FilterPopover onFilter={(filteredData) => setPositions(filteredData)} />
+      <div className="p-3 bg-white shadow rounded flex justify-between items-center mb-2">
+        {role === 'Manager' && (
+          <button
+            className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
+            onClick={() => navigate('/department/positions/add')}
+          >
+            Додати
+          </button>
+        )}
+        <div className="ml-auto">
+          <FilterPopover onFilter={(filteredData) => setPositions(filteredData)} />
+        </div>
       </div>
 
       <div className="overflow-x-auto overflow-y-scroll bg-white shadow rounded max-h-[70vh]">
         <table className="table-fixed min-w-full text-left">
           <colgroup>
-            <col className="w-4" />        {/* чекбокс */}
-            <col className="w-4/8" />      {/* Назва посади */}
-            <col className="w-1/8" />      {/* Відділ */}
-            <col className="w-24" />       {/* Дії */}
+            <col className="w-4" />
+            <col className="w-4/8" />
+            <col className="w-1/8" />
+            <col className="w-24" />
           </colgroup>
           <thead className="bg-white sticky top-0 z-10">
             <tr className="border-b border-gray-700">
               <th className="px-2 py-2"></th>
               <th className="px-4 py-2">Назва посади</th>
               <th className="px-4 py-2">Відділ</th>
-              <th className="px-4 py-2 text-right whitespace-nowrap">Дії</th>
+              {role === 'Manager' && (
+                <th className="px-4 py-2 text-right whitespace-nowrap">Дії</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -80,24 +88,26 @@ export default function Positions() {
                 </td>
                 <td className="px-4 py-3">{pos.name}</td>
                 <td className="px-4 py-3">{pos.department_name}</td>
-                <td className="px-4 py-3 text-right space-x-2">
-                  <button
-                    onClick={() => handleEdit(pos.id)}
-                    title="Редагувати"
-                    className="p-1 hover:bg-gray-700 rounded"
-                  >
-                    <Edit2 size={16} className="text-gray-400 hover:text-white" />
-                  </button>
-                  
-                  <button
-                    onClick={() => deleteItem(pos.id)}
-                    disabled={isLoading}
-                    className="p-1 hover:bg-red-50 rounded"
-                    title="Видалити"
-                  >
-                    <X size={16} className="text-red-500 hover:text-red-700" />
-                  </button>
-                </td>
+                {role === 'Manager' && (
+                  <td className="px-4 py-3 text-right space-x-2">
+                    <button
+                      onClick={() => handleEdit(pos.id)}
+                      title="Редагувати"
+                      className="p-1 hover:bg-gray-700 rounded"
+                    >
+                      <Edit2 size={16} className="text-gray-400 hover:text-white" />
+                    </button>
+                    
+                    <button
+                      onClick={() => deleteItem(pos.id)}
+                      disabled={isLoading}
+                      className="p-1 hover:bg-red-50 rounded"
+                      title="Видалити"
+                    >
+                      <X size={16} className="text-red-500 hover:text-red-700" />
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

@@ -53,19 +53,19 @@ export default function Projects() {
       <div className="overflow-x-auto overflow-y-scroll bg-white shadow rounded max-h-[70vh]">
         <table className="table-fixed min-w-full text-left">
           <colgroup>
-            <col className="w-3/12" />
-            <col className="w-4/12" />
-            <col className="w-2/12" />
-            <col className="w-1/12" />
-            <col className="w-1/12" />
-            <col className="w-2/12" />
-            <col className="w-24" />
+            <col className="w-3/12" /> {/* Назва */}
+            <col className="w-4/12" /> {/* Опис */}
+            <col className="w-2/12" /> {/* Остання зміна ким */}
+            <col className="w-1/12" /> {/* Початок */}
+            <col className="w-1/12" /> {/* Закінчення */}
+            <col className="w-2/12" /> {/* Статус */}
+            <col className="w-24" />   {/* Дії */}
           </colgroup>
           <thead className="bg-white sticky top-0 z-10">
             <tr className="border-b border-gray-300">
               <th className="px-4 py-2">Назва</th>
               <th className="px-4 py-2">Опис</th>
-              <th className="px-4 py-2">Відділ</th>
+              <th className="px-4 py-2">Остання зміна</th>
               <th className="px-4 py-2">Початок</th>
               <th className="px-4 py-2">Закінчення</th>
               <th className="px-4 py-2">Статус</th>
@@ -74,27 +74,44 @@ export default function Projects() {
           </thead>
           <tbody>
             {projects.map(proj => (
-              <tr key={proj.id} className="border-b hover:bg-gray-100">
+              <tr
+                key={proj.id}
+                className="border-b border-gray-700 hover:bg-gray-300 cursor-pointer"
+                onClick={() => navigate(`/project/projects/${proj.id}`)}
+              >
                 <td className="px-4 py-3">{proj.name}</td>
                 <td className="px-4 py-3 truncate">{proj.description}</td>
-                <td className="px-4 py-3">{proj.department_name}</td>
+                <td className="px-4 py-3">
+                  {proj.last_modified_by_name || '—'}
+                  <br />
+                  <span className="text-xs text-gray-500">
+                    {proj.last_modified_at ? formatDate(proj.last_modified_at) : ''}
+                  </span>
+                </td>
                 <td className="px-4 py-3">{formatDate(proj.start_date)}</td>
                 <td className="px-4 py-3">{proj.end_date ? formatDate(proj.end_date) : '—'}</td>
                 <td className="px-4 py-3">{proj.status_display}</td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end items-center space-x-2">
                     <button
-                      onClick={() => handleEdit(proj.id)}
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleEdit(proj.id);
+                      }}
                       title="Редагувати"
-                      className="p-1 hover:bg-gray-200 rounded"
+                      className="p-1 hover:bg-gray-700 rounded"
                     >
-                      <Edit2 size={16} />
+                      <Edit2 size={16} className="text-gray-400 hover:text-white" />
                     </button>
+
                     <button
-                      onClick={() => deleteItem(proj.id)}
+                      onClick={e => {
+                        e.stopPropagation();
+                        deleteItem(proj.id);
+                      }}
                       disabled={deleting}
-                      title="Видалити"
                       className="p-1 hover:bg-red-50 rounded"
+                      title="Видалити"
                     >
                       <X size={16} className="text-red-500 hover:text-red-700" />
                     </button>

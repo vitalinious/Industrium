@@ -4,39 +4,22 @@ import api from '../../api';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import uk from 'date-fns/locale/uk';
 import 'react-datepicker/dist/react-datepicker.css';
-import {
-  validateNotEmpty
-} from '../../utils/validators';
+import { validateNotEmpty } from '../../utils/validators';
 
 registerLocale('uk', uk);
 
 export default function CreateProject() {
   const navigate = useNavigate();
 
-  // форма
-  const [name, setName]               = useState('');
+  const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [departmentId, setDepartmentId] = useState('');
-  const [startDate, setStartDate]     = useState(null);
-  const [endDate, setEndDate]         = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
-  // дані для селекту
-  const [departments, setDepartments] = useState([]);
-
-  // помилки
-  const [nameErr, setNameErr]         = useState(null);
+  const [nameErr, setNameErr] = useState(null);
   const [startDateErr, setStartDateErr] = useState(null);
-  const [endDateErr, setEndDateErr]     = useState(null);
-  const [submitErr, setSubmitErr]     = useState(null);
-
-  const attachRequiredMsg = e => e.target.setCustomValidity('Будь ласка, заповніть це поле');
-  const clearRequiredMsg  = e => e.target.setCustomValidity('');
-
-  useEffect(() => {
-    api.get('/departments/')
-      .then(res => setDepartments(res.data))
-      .catch(() => setDepartments([]));
-  }, []);
+  const [endDateErr, setEndDateErr] = useState(null);
+  const [submitErr, setSubmitErr] = useState(null);
 
   const formatDateLocal = (date) => {
     const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
@@ -46,24 +29,21 @@ export default function CreateProject() {
   const handleSubmit = async e => {
     e.preventDefault();
 
-    // скидання попередніх помилок
     setNameErr(null);
     setStartDateErr(null);
     setEndDateErr(null);
     setSubmitErr(null);
 
-    // базова валідація
     const nmErr = validateNotEmpty(name);
     setNameErr(nmErr);
-    if (nmErr || !departmentId || !startDate) {
+    if (nmErr || !startDate) {
       setSubmitErr('Будь ласка, заповніть обов’язкові поля');
       return;
     }
 
-    // додаткова валідація дат
     let valid = true;
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
     if (startDate < today) {
       setStartDateErr('Дата початку не може бути раніше за сьогодні');
       valid = false;
@@ -74,20 +54,13 @@ export default function CreateProject() {
     }
     if (!valid) return;
 
-    // форматування дат без UTC-зсуву
-    const formattedStartDate = formatDateLocal(startDate);
-    const formattedEndDate = endDate ? formatDateLocal(endDate) : null;
-
-    // відправка даних
     try {
-      const payload = {
-        name:        name.trim(),
+      await api.post('/projects/', {
+        name: name.trim(),
         description: description.trim(),
-        department:  departmentId,
-        start_date:  formattedStartDate,
-        end_date:    formattedEndDate,
-      };
-      await api.post('/projects/', payload);
+        start_date: formatDateLocal(startDate),
+        end_date: endDate ? formatDateLocal(endDate) : null,
+      });
       navigate('/project/projects');
     } catch (err) {
       if (err.response?.status === 400) {
@@ -105,18 +78,14 @@ export default function CreateProject() {
     <div className="p-6 bg-white shadow rounded overflow-auto">
       <h1 className="text-xl font-semibold mb-4">Новий проєкт</h1>
       <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6">
-
-        {/* Ліва колонка */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm mb-1">
-              Назва проєкту <span className="text-red-500">*</span>
-            </label>
+            <label className="block text-sm mb-1">Назва проєкту <span className="text-red-500">*</span></label>
             <input
               type="text"
               required
-              onInvalid={attachRequiredMsg}
-              onInput={clearRequiredMsg}
+              onInvalid={e => e.target.setCustomValidity('Будь ласка, заповніть це поле')}
+              onInput={e => e.target.setCustomValidity('')}
               className="w-full border px-3 py-2 rounded"
               value={name}
               onBlur={() => setNameErr(validateNotEmpty(name))}
@@ -125,7 +94,7 @@ export default function CreateProject() {
             {nameErr && <p className="text-red-500 text-sm mt-1">{nameErr}</p>}
           </div>
 
-          <div className="md:col-span-2">
+          <div>
             <label className="block text-sm mb-1">Опис</label>
             <textarea
               className="w-full border px-3 py-2 rounded"
@@ -136,33 +105,9 @@ export default function CreateProject() {
           </div>
         </div>
 
-        {/* Права колонка */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm mb-1">
-              Відділ <span className="text-red-500">*</span>
-            </label>
-            <select
-              required
-              onInvalid={attachRequiredMsg}
-              onInput={clearRequiredMsg}
-              className="w-full border px-3 py-2 rounded"
-              value={departmentId}
-              onChange={e => setDepartmentId(e.target.value)}
-            >
-              <option value="">Оберіть відділ</option>
-              {departments.map(dep => (
-                <option key={dep.id} value={dep.id}>
-                  {dep.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1">
-              Дата початку <span className="text-red-500">*</span>
-            </label>
+            <label className="block text-sm mb-1">Дата початку <span className="text-red-500">*</span></label>
             <DatePicker
               locale="uk"
               dateFormat="dd.MM.yyyy"
@@ -171,8 +116,6 @@ export default function CreateProject() {
               placeholderText="дд.мм.рррр"
               className="w-full border px-3 py-2 rounded"
               required
-              onInvalid={attachRequiredMsg}
-              onInput={clearRequiredMsg}
             />
             {startDateErr && <p className="text-red-500 text-sm mt-1">{startDateErr}</p>}
           </div>

@@ -20,8 +20,8 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('name', 'department', 'start_date', 'end_date', 'status')
-    list_filter = ('status', 'department')
+    list_display = ('name',  'start_date', 'end_date', 'status')
+    list_filter = ('status',)
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):

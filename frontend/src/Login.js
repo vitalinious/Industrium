@@ -15,10 +15,9 @@ export default function Login() {
 
     try {
       const { data } = await axios.post('/api/token/', {
-        username,
-        password
-      });
-
+      username,
+      password
+    });
       // Зберігаємо токени
       localStorage.setItem('access_token', data.access);
       localStorage.setItem('refresh_token', data.refresh);

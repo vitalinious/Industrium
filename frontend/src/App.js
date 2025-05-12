@@ -21,10 +21,12 @@ import EditEmployee      from      './department/employees/edit';
 import Projects          from      './project/projects/projects'
 import CreateProject     from      './project/projects/add'
 import EditProject       from      './project/projects/edit'
+import ProjectReview     from      './project/projects/review'
 
-import Tasks          from         './task/tasks/tasks'
-import CreateTask     from         './project/projects/add'
-import EditTask      from          './project/projects/edit'
+import Tasks             from      './task/tasks/tasks'
+import CreateTask        from      './task/tasks/add'
+import EditTask          from      './task/tasks/edit'
+import TaskReview        from      './task/tasks/review';
 
 export default function App() {
   return (
@@ -53,10 +55,13 @@ export default function App() {
           <Route path="project/projects"                  element={<Projects />} />
           <Route path="project/projects/add"              element={<CreateProject />} />
           <Route path="project/projects/edit/:id"         element={<EditProject />} />
+          <Route path="project/projects/:id"              element={<ProjectReview />} />
 
           <Route path="task/tasks"                        element={<Tasks />} />
           <Route path="task/tasks/add"                    element={<CreateTask />} />
           <Route path="task/tasks/edit/:id"               element={<EditTask />} />
+          <Route path="task/tasks/:id"                    element={<TaskReview />} />
+
         </Route>
 
         {/* Усі інші шляхи редіректять на логін */}
