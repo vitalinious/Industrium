@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
 from .models import Position, Department, Project
 from django.contrib.auth import get_user_model
@@ -7,31 +8,12 @@ import string
 
 User = get_user_model()
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password2 = serializers.CharField(write_only=True)
-
-    class Meta:
-        model  = User
-        fields = [
-            'username', 'password', 'password2',
-            'first_name', 'last_name', 'middle_name',
-            'email', 'phone_number', 'department', 'position',
-            'role',
-        ]
-        extra_kwargs = {
-            'password': {'write_only': True},
-            'role':     {'read_only': True},
-        }
-
-    def validate(self, data):
-        if data['password'] != data.pop('password2'):
-            raise serializers.ValidationError("Passwords must match")
-        return data
-
-    def create(self, validated_data):
-        validated_data['role'] = 'employee'
-        user = User.objects.create_user(**validated_data)
-        return user
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['role'] = user.role  # 👈 Додаємо роль до токена
+        return token
 
 class ProfileSerializer(serializers.ModelSerializer):
     position = serializers.StringRelatedField()

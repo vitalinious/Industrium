@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -11,18 +12,27 @@ export default function Login() {
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
-  
+
     try {
-      const { data } = await axios.post('/api/auth/login/', {
+      const { data } = await axios.post('/api/token/', {
         username,
         password
       });
-  
-      console.log('Login response:', data);
-  
+
+      // Зберігаємо токени
       localStorage.setItem('access_token', data.access);
       localStorage.setItem('refresh_token', data.refresh);
-  
+
+      // Декодуємо роль
+      const decoded = jwtDecode(data.access);
+      console.log('TOKEN DEBUG:', decoded);
+      const role = decoded.role;
+      console.log('Роль користувача:', role);
+
+      // За потреби збережи роль окремо (не обов’язково)
+      // localStorage.setItem('user_role', role);
+
+      // Перенаправлення після входу
       navigate('/department/account');
     } catch (err) {
       setError('Невірний логін або пароль');
@@ -37,11 +47,8 @@ export default function Login() {
           <div className="mb-4 text-center text-red-600">{error}</div>
         )}
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Username */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Логін
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Логін</label>
             <input
               type="text"
               value={username}
@@ -50,12 +57,8 @@ export default function Login() {
                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-
-          {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Пароль
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Пароль</label>
             <input
               type="password"
               value={password}

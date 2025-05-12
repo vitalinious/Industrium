@@ -1,28 +1,27 @@
 from django.shortcuts import render
 from rest_framework import viewsets, status
-from rest_framework.views     import APIView
+from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import CustomTokenObtainPairSerializer
 
-from .serializers import (RegisterSerializer, ProfileSerializer,
-                          PositionSerializer, DepartmentSerializer,
-                          EmployeeSerializer, ProjectSerializer)
+from .serializers import (
+    ProfileSerializer,
+    PositionSerializer, DepartmentSerializer,
+    EmployeeSerializer, ProjectSerializer
+)
 
 from .models import Position, Department, Project
-
-from .permissions import IsChief
-import random
-import string
+from .permissions import IsManagerOrReadOnly
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-class RegisterUserView(generics.CreateAPIView):
-    queryset         = User.objects.all()
-    serializer_class = RegisterSerializer
-    permission_classes = [IsAuthenticated, IsChief]
+class CustomTokenView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
     
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -30,14 +29,15 @@ class ProfileView(APIView):
     def get(self, request):
         serializer = ProfileSerializer(request.user)
         return Response(serializer.data)
-    
+
+
 class PositionViewSet(viewsets.ModelViewSet):
     queryset = Position.objects.all()
     serializer_class = PositionSerializer
+    permission_classes = [IsManagerOrReadOnly]
 
     def get_queryset(self):
         qs = super().get_queryset()
-
         dept_id = self.request.query_params.get('department')
         if dept_id:
             qs = qs.filter(department_id=dept_id)
@@ -46,12 +46,12 @@ class PositionViewSet(viewsets.ModelViewSet):
         if name_param:
             names = [n.strip() for n in name_param.split(',') if n.strip()]
             qs = qs.filter(name__in=names)
-
         return qs
-    
+
+
 class DepartmentViewSet(viewsets.ModelViewSet):
     serializer_class = DepartmentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsManagerOrReadOnly]
 
     def get_queryset(self):
         queryset = Department.objects.all()
@@ -60,10 +60,11 @@ class DepartmentViewSet(viewsets.ModelViewSet):
             names = [n.strip() for n in name_param.split(',') if n.strip()]
             queryset = queryset.filter(name__in=names)
         return queryset
-    
+
+
 class EmployeeViewSet(viewsets.ModelViewSet):
     serializer_class = EmployeeSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsManagerOrReadOnly]
 
     def get_queryset(self):
         qs = User.objects.all()
@@ -94,20 +95,11 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
         return qs
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=self.get_success_headers(serializer.data)
-        )
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsManagerOrReadOnly]
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -148,6 +140,7 @@ def suggest_positions(request):
         return Response(data)
     return Response([])
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def suggest_departments(request):
@@ -158,14 +151,13 @@ def suggest_departments(request):
         return Response(data)
     return Response([])
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def suggest_employees(request):
     q = request.GET.get('name', '')
     if q:
-        qs = User.objects.filter(
-            last_name__icontains=q
-        )[:10]
+        qs = User.objects.filter(last_name__icontains=q)[:10]
         data = [
             {
                 'id': u.id,
@@ -183,6 +175,5 @@ def suggest_project(request):
     q = request.query_params.get('name', '').strip()
     if not q:
         return Response([])
-
     matches = Project.objects.filter(name__icontains=q)[:10]
     return Response([{'id': p.id, 'name': p.name} for p in matches])

@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import (RegisterUserView, ProfileView,
+from .views import (CustomTokenView, ProfileView,
                     PositionViewSet, DepartmentViewSet,
                     EmployeeViewSet, ProjectViewSet,
                     suggest_positions, suggest_departments,
@@ -13,7 +13,7 @@ router.register(r'employees',       EmployeeViewSet,            basename='user')
 router.register(r'projects',        ProjectViewSet,             basename='project')
 
 urlpatterns = [
-    path('auth/create-employee/',   RegisterUserView.as_view(), name='create-employee'),
+    path('api/token/',              CustomTokenView.as_view(),  name='token_obtain_pair'),
     path('auth/profile/',           ProfileView.as_view(),      name='user-profile'),
     
     path('positions/suggest/',      suggest_positions,          name='suggest-positions'),
