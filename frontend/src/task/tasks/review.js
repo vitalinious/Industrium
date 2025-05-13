@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api';
+import useUserRole from '../../hooks/useUserRole';
 
 export default function TaskDetail() {
   const { id } = useParams();
@@ -12,6 +13,7 @@ export default function TaskDetail() {
   const [uploadError, setUploadError] = useState('');
   const [confirming, setConfirming] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const role = useUserRole();
 
   const fetchTask = async () => {
     try {
@@ -30,7 +32,10 @@ export default function TaskDetail() {
     e.preventDefault();
     if (!newComment.trim()) return;
     try {
-      await api.post('/task-comments/', { task: id, content: newComment });
+      await api.post('/task-comments/', {
+      object_id: id,
+      content: newComment
+    });
       setNewComment('');
       fetchTask();
     } catch {
@@ -71,6 +76,15 @@ export default function TaskDetail() {
     }
   };
 
+  const handleCommentDelete = async commentId => {
+    try {
+      await api.delete(`/task-comments/${commentId}/`);
+      fetchTask();
+    } catch {
+      alert('Не вдалося видалити коментар');
+    }
+  };
+
   if (error) return <div className="p-6 text-center text-red-600">{error}</div>;
   if (!task) return <div className="p-6 text-center">Завантаження…</div>;
 
@@ -106,11 +120,19 @@ export default function TaskDetail() {
               {(task.comments || []).length === 0
                 ? <p className="text-sm text-gray-500">Немає коментарів</p>
                 : task.comments.map(c => (
-                    <li key={c.id} className="border px-3 py-2 rounded">
+                    <li key={c.id} className="border px-3 py-2 rounded relative group">
                       <div className="text-xs text-gray-500">
                         {c.author_name} — {c.created_at}
                       </div>
                       <div>{c.content}</div>
+                      {role === 'Manager' && (
+                        <button
+                          onClick={() => handleCommentDelete(c.id)}
+                          className="absolute top-2 right-2 text-red-500 text-xs hover:underline hidden group-hover:inline"
+                        >
+                          Видалити
+                        </button>
+                      )}
                     </li>
                   ))}
             </ul>
@@ -168,7 +190,7 @@ export default function TaskDetail() {
         className="mt-4 text-blue-600 hover:underline"
         onClick={() => navigate(-1)}
       >
-        ← Назад до списку
+        ← Назад
       </button>
     </div>
   );

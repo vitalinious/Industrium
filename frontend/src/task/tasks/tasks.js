@@ -55,22 +55,26 @@ export default function Tasks() {
             Додати
           </button>
         )}
-        <FilterPopover onFilter={data => setTasks(data)} endpoint="tasks" />
+        <div className="ml-auto">
+          <FilterPopover onFilter={data => setTasks(data)} endpoint="tasks" />
+        </div>
       </div>
 
       <div className="overflow-x-auto overflow-y-scroll bg-white shadow rounded max-h-[70vh]">
         <table className="table-fixed min-w-full text-left">
           <colgroup>
-            <col className="w-3/12" />
-            <col className="w-2/12" />
-            <col className="w-2/12" />
-            <col className="w-2/12" />
-            <col className="w-2/12" />
-            <col className="w-1/12" />
-            <col className="w-24" />
+            <col className="w-[50px]" />
+            <col className="w-3/12"   />
+            <col className="w-2/12"   />
+            <col className="w-2/12"   />
+            <col className="w-2/12"   />
+            <col className="w-2/12"   />
+            <col className="w-1/12"   />
+            <col className="w-24"     />
           </colgroup>
           <thead className="bg-white sticky top-0 z-10">
             <tr className="border-b border-gray-300">
+              <th className="px-4 py-2 border-r border-gray-300">ID</th>
               <th className="px-4 py-2">Назва</th>
               <th className="px-4 py-2">Проєкт</th>
               <th className="px-4 py-2">Виконавець</th>
@@ -89,6 +93,7 @@ export default function Tasks() {
                 className="border-b hover:bg-gray-100 cursor-pointer"
                 onClick={() => navigate(`/task/tasks/${task.id}`, { state: { from: location.pathname } })}
               >
+                <td className="px-4 py-3 border-r border-gray-200">{task.id}</td>
                 <td className="px-4 py-3">{task.title}</td>
                 <td className="px-4 py-3">{task.project_name || '—'}</td>
                 <td className="px-4 py-3">{task.assignee_name}</td>
@@ -99,14 +104,21 @@ export default function Tasks() {
                   <td className="px-4 py-3">
                     <div className="flex justify-end items-center space-x-2">
                       <button
-                        onClick={() => handleEdit(task.id)}
+                        onClick={e => {
+                            e.stopPropagation();
+                            handleEdit(task.id);
+                        }}
                         title="Редагувати"
                         className="p-1 hover:bg-gray-200 rounded"
                       >
                         <Edit2 size={16} />
                       </button>
+
                       <button
-                        onClick={() => deleteItem(task.id)}
+                        onClick={e => {
+                          e.stopPropagation();
+                          deleteItem(task.id);
+                        }}
                         disabled={deleting}
                         title="Видалити"
                         className="p-1 hover:bg-red-50 rounded"

@@ -4,7 +4,7 @@ from .views import (CustomTokenView, ProfileView,
                     PositionViewSet, DepartmentViewSet,
                     EmployeeViewSet, ProjectViewSet,
                     ProjectCommentViewSet, AttachmentViewSet,
-                    TaskViewSet,
+                    TaskViewSet, TaskCommentViewSet,
                     suggest_positions, suggest_departments,
                     suggest_employees, suggest_project,
                     suggest_employees_filtered, my_tasks,
@@ -15,7 +15,8 @@ router.register(r'positions',       PositionViewSet,            basename='positi
 router.register(r'departments',     DepartmentViewSet,          basename='department')
 router.register(r'employees',       EmployeeViewSet,            basename='user')
 router.register(r'projects',        ProjectViewSet,             basename='project')
-router.register(r'project-comments',ProjectCommentViewSet,      basename='projectcomment')
+router.register(r'project-comments',ProjectCommentViewSet,      basename='project-comments')
+router.register(r'task-comments',   TaskCommentViewSet,         basename='task-comments')
 router.register(r'attachments',     AttachmentViewSet)
 router.register(r'tasks',           TaskViewSet,                basename='tasks')
 

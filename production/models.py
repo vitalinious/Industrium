@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.utils.timezone import localtime
+from django.contrib.contenttypes.fields import GenericRelation
 
 # === Довідкові таблиці ===
 class Department(models.Model):
@@ -126,6 +127,7 @@ class Order(models.Model):
     def __str__(self):
         return self.number
 
+
 class Task(models.Model):
     PRIORITY_CHOICES = [
         (1, 'Низька'),
@@ -135,6 +137,7 @@ class Task(models.Model):
     STATUS_CHOICES = [
         ('Planned', 'Заплановано'),
         ('InProgress', 'В роботі'),
+        ('PendingConfirmation', 'Очікує підтвердження'),
         ('Completed', 'Завершено'),
     ]
     title = models.CharField(max_length=200)
@@ -149,6 +152,8 @@ class Task(models.Model):
     due_date = models.DateField(null=True, blank=True)
     is_done = models.BooleanField(default=False)
     is_confirmed = models.BooleanField(default=False)
+    comments = GenericRelation('production.Comments', related_query_name='task_comments')
+    attachment_set = GenericRelation('production.Attachment', related_query_name='task_attachments')
 
     class Meta:
         indexes = [
@@ -177,11 +182,17 @@ class Task(models.Model):
     def __str__(self):
         return self.title
 
-class ProjectComment(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='comments')
+class Comments(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        return f'Comment by {self.author} on {self.content_object}'
  
 class Attachment(models.Model):
     file = models.FileField(upload_to='attachments/')

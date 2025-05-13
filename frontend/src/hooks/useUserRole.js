@@ -12,10 +12,10 @@ export default function useUserRole() {
         setRole(decoded.role || null);
       } catch (err) {
         console.error('Помилка токена:', err);
-        setRole(null); // важливо!
+        setRole(null);
       }
     } else {
-      setRole(null); // також обовʼязково
+      setRole(null);
     }
   }, []);
 

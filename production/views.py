@@ -7,17 +7,18 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import CustomTokenObtainPairSerializer
+from django.contrib.contenttypes.models import ContentType
 
 
 from .serializers import (
     ProfileSerializer,
     PositionSerializer, DepartmentSerializer,
     EmployeeSerializer, ProjectSerializer,
-    TaskSerializer, ProjectCommentSerializer,
+    TaskSerializer, CommentSerializer,
     AttachmentSerializer, TaskNotificationSerializer
 )
 
-from .models import Position, Department, Project, Task, ProjectComment, Attachment, TaskNotification
+from .models import Position, Department, Project, Task, Comments, Attachment, TaskNotification
 from .permissions import IsManagerOrReadOnly
 from django.contrib.auth import get_user_model
 
@@ -70,7 +71,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsManagerOrReadOnly]
 
     def get_queryset(self):
-        qs = User.objects.all()
+        qs = User.objects.all().order_by('-date_joined')
         params = self.request.query_params
 
         ids_param = params.get('ids')
@@ -140,7 +141,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
 
 class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all()
+    queryset = Task.objects.all().order_by('-created_at')
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated, IsManagerOrReadOnly]
 
@@ -201,16 +202,16 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Задача вже підтверджена'}, status=400)
         
         # Тут логіка менеджера (тимчасово можна задати просто superuser або staff)
-        manager = User.objects.filter(is_staff=True).first()
-        if not manager:
-            return Response({'detail': 'Керівника не знайдено'}, status=400)
+        managers = User.objects.filter(role='Manager')
+        if not managers.exists():
+            return Response({'detail': 'Керівників не знайдено'}, status=400)
 
-        # Створюємо сповіщення
-        TaskNotification.objects.create(
-            task=task,
-            sender=request.user,
-            recipient=manager,
-        )
+        for manager in managers:
+            TaskNotification.objects.create(
+                task=task,
+                sender=request.user,
+                recipient=manager,
+            )
 
         # Змінюємо статус задачі
         task.status = 'PendingConfirmation'
@@ -228,18 +229,55 @@ class TaskViewSet(viewsets.ModelViewSet):
         task.status = 'Completed'
         task.save(update_fields=['status'])
 
-        # Позначаємо всі пов’язані сповіщення як прочитані
-        TaskNotification.objects.filter(task=task, recipient=request.user).update(is_read=True)
+        TaskNotification.objects.filter(task=task).update(is_read=True)
 
         return Response({'status': 'confirmed'})
         
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets
+from .models import Comments
+from .serializers import CommentSerializer
+
 class ProjectCommentViewSet(viewsets.ModelViewSet):
-    queryset = ProjectComment.objects.all()
-    serializer_class = ProjectCommentSerializer
+    queryset = Comments.objects.all()
+    serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        from django.contrib.contenttypes.models import ContentType
+        project_type = ContentType.objects.get(app_label='production', model='project')
+        return Comments.objects.filter(content_type=project_type)
+
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        from django.contrib.contenttypes.models import ContentType
+        serializer.save(
+            author=self.request.user,
+            content_type=ContentType.objects.get(app_label='production', model='project')
+        )
+        
+class TaskCommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        task_type = ContentType.objects.get_for_model(Task)
+        object_id = self.request.query_params.get('object_id')
+
+        if self.action == 'list' and object_id:
+            return Comments.objects.filter(
+                content_type=task_type,
+                object_id=object_id
+            ).order_by('-created_at')
+
+        return Comments.objects.filter(content_type=task_type)
+
+    def perform_create(self, serializer):
+        content_type = ContentType.objects.get_for_model(Task)
+        serializer.save(author=self.request.user, content_type=content_type)
+
+    def perform_create(self, serializer):
+        content_type = ContentType.objects.get_for_model(Task)
+        serializer.save(author=self.request.user, content_type=content_type)
 
 class AttachmentViewSet(viewsets.ModelViewSet):
     queryset = Attachment.objects.all()
@@ -321,5 +359,7 @@ def my_tasks(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def unread_notifications(request):
-    qs = TaskNotification.objects.filter(recipient=request.user, is_read=False)
+    qs = TaskNotification.objects.filter(recipient=request.user, is_read=False)\
+                                 .select_related('task', 'sender')\
+                                 .order_by('-created_at')
     return Response(TaskNotificationSerializer(qs, many=True).data)

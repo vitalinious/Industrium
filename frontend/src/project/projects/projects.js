@@ -57,22 +57,26 @@ export default function Projects() {
             Додати
           </button>
         )}
-        <FilterPopover onFilter={data => setProjects(data)} endpoint="projects" />
+        <div className="ml-auto">
+          <FilterPopover onFilter={data => setProjects(data)} endpoint="projects" />
+        </div>
       </div>
 
       <div className="overflow-x-auto overflow-y-scroll bg-white shadow rounded max-h-[70vh]">
         <table className="table-fixed min-w-full text-left">
           <colgroup>
-            <col className="w-3/12" /> {/* Назва */}
-            <col className="w-4/12" /> {/* Опис */}
-            <col className="w-2/12" /> {/* Остання зміна ким */}
-            <col className="w-1/12" /> {/* Початок */}
-            <col className="w-1/12" /> {/* Закінчення */}
-            <col className="w-2/12" /> {/* Статус */}
-            <col className="w-24" />   {/* Дії */}
+            <col className="w-[50px]" />
+            <col className="w-3/12"   />
+            <col className="w-4/12"   />
+            <col className="w-2/12"   />
+            <col className="w-1/12"   />
+            <col className="w-1/12"   />
+            <col className="w-2/12"   />
+            <col className="w-24"     />
           </colgroup>
           <thead className="bg-white sticky top-0 z-10">
             <tr className="border-b border-gray-300">
+              <th className="px-4 py-2 border-r border-gray-300">ID</th>
               <th className="px-4 py-2">Назва</th>
               <th className="px-4 py-2">Опис</th>
               <th className="px-4 py-2">Остання зміна</th>
@@ -91,6 +95,7 @@ export default function Projects() {
                 className="border-b border-gray-700 hover:bg-gray-300 cursor-pointer"
                 onClick={() => navigate(`/project/projects/${proj.id}`)}
               >
+                <td className="px-4 py-3 border-r border-gray-200">{proj.id}</td>
                 <td className="px-4 py-3">{proj.name}</td>
                 <td className="px-4 py-3 truncate">{proj.description}</td>
                 <td className="px-4 py-3">

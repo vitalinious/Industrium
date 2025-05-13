@@ -70,6 +70,7 @@ export default function Employees() {
       <div className="overflow-x-auto overflow-y-scroll bg-white shadow rounded max-h-[70vh]">
         <table className="table-fixed min-w-full text-left">
           <colgroup>
+            <col className="w-[50px]" />
             <col className="w-3/12" />
             <col className="w-1/12" />
             <col className="w-2/12" />
@@ -80,6 +81,7 @@ export default function Employees() {
           </colgroup>
           <thead className="bg-white sticky top-0 z-10">
             <tr className="border-b border-gray-700">
+              <th className="px-4 py-2 border-r border-gray-400">№</th>
               <th className="px-4 py-2">ПІБ</th>
               <th className="px-4 py-2">Email</th>
               <th className="px-4 py-2">Телефон</th>
@@ -92,8 +94,9 @@ export default function Employees() {
             </tr>
           </thead>
           <tbody>
-            {employees.map(emp => (
+            {employees.map((emp, index) => (
               <tr key={emp.id} className="border-b border-gray-700 hover:bg-gray-300">
+                <td className="px-4 py-3 border-r border-gray-300">{index + 1}</td>
                 <td className="px-4 py-3">{emp.full_name}</td>
                 <td className="px-4 py-3">{emp.email}</td>
                 <td className="px-4 py-3">{formatPhone(emp.phone_number)}</td>

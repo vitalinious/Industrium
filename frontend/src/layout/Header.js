@@ -11,7 +11,10 @@ const titles = {
   '/positions': 'Посади',
   '/dashboard': 'Дашборд',
   '/projects': 'Проєкти',
-  // додай інші за потреби
+  '/department/employees': 'Співробітники',
+  '/department/departments': 'Відділи',
+  '/department/positions': 'Посади',
+  '/task/tasks': 'Завдання',
 };
 
 export default function Header() {
@@ -21,14 +24,19 @@ export default function Header() {
 
   const [notifications, setNotifications] = useState([]);
   const [showPopover, setShowPopover] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const popoverRef = useRef(null);
 
   useEffect(() => {
-    // Отримати непрочитані сповіщення
     api.get('/notifications/unread/').then(res => setNotifications(res.data));
   }, []);
 
-  // Закрити popover при кліку поза ним
+  useEffect(() => {
+    api.get('/auth/profile/')
+      .then(res => setCurrentUser(res.data))
+      .catch(err => console.error('Не вдалося отримати користувача', err));
+  }, []);
+
   useEffect(() => {
     const handler = e => {
       if (popoverRef.current && !popoverRef.current.contains(e.target)) {
@@ -56,7 +64,6 @@ export default function Header() {
           )}
         </button>
 
-        {/* POPUP */}
         {showPopover && (
           <div
             ref={popoverRef}
@@ -82,7 +89,11 @@ export default function Header() {
         )}
 
         <div className="flex items-center space-x-2 cursor-pointer">
-          <span className="hidden md:block text-gray-700">---</span>
+          <span className="hidden md:block text-gray-700">
+            {currentUser
+              ? `${currentUser.last_name} ${currentUser.first_name} ${currentUser.middle_name || ''}`
+              : '...'}
+          </span>
         </div>
       </div>
     </header>

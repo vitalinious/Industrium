@@ -9,7 +9,24 @@ import {
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
 
+import useUserRole from '../hooks/useUserRole';
+
 export default function Sidebar() {
+  const role = useUserRole();
+  const [collapsed, setCollapsed] = useState(false);
+  const [openMenus, setOpenMenus] = useState({});
+
+  const toggleMenu = label => {
+    setOpenMenus(prev => ({
+      ...prev,
+      [label]: !prev[label]
+    }));
+  };
+
+  if (role === null) {
+    return <div className="text-white p-4">Завантаження меню...</div>;
+  }
+
   const links = [
     {
       label: 'Дашборд',
@@ -34,7 +51,9 @@ export default function Sidebar() {
       icon: ClipboardDocumentIcon,
       to: '/task',
       children: [
-        { label: 'Перегляд', to: '/task/tasks' },
+        ...(role === 'Manager'
+          ? [{ label: 'Перегляд', to: '/task/tasks' }]
+          : []),
         { label: 'Мої задачі', to: '/task/myTasks' },
       ]
     },
@@ -42,10 +61,12 @@ export default function Sidebar() {
       label: 'Аналітика',
       icon: ChartBarIcon,
       to: '/analytics',
-      children: [
-        { label: 'Звіти', to: '/analytics/reports' },
-        { label: 'Порівняння', to: '/analytics/comparison' },
-      ]
+      children: role === 'Manager'
+        ? [
+            { label: 'Звіти', to: '/analytics/reports' },
+            { label: 'Порівняння', to: '/analytics/comparison' },
+          ]
+        : []
     },
     {
       label: 'Підрозділ',
@@ -53,25 +74,22 @@ export default function Sidebar() {
       to: '/department',
       children: [
         { label: 'Мій аккаунт', to: '/department/account' },
-        { label: 'Співробітники', to: '/department/employees' },
-        { label: 'Відділи', to: '/department/departments' },
-        { label: 'Посади', to: '/department/positions' },
+        ...(role === 'Manager'
+          ? [
+              { label: 'Співробітники', to: '/department/employees' },
+              { label: 'Відділи', to: '/department/departments' },
+              { label: 'Посади', to: '/department/positions' },
+            ]
+          : [])
       ]
     },
   ];
 
-  const [collapsed, setCollapsed] = useState(false);
-  const [openMenus, setOpenMenus] = useState({});
-
-  const toggleMenu = label => {
-    setOpenMenus(prev => ({
-      ...prev,
-      [label]: !prev[label]
-    }));
-  };
+  // Видалити пункти без дітей (наприклад, Аналітика у Worker)
+  const filteredLinks = links.filter(link => !link.children || link.children.length > 0);
 
   return (
-    <aside className={`transition-all duration-300 bg-gray-800 border-r border-gray-700 text-gray-200 h-screen ${collapsed ? 'w-16' : 'w-64'} flex-shrink-0` }> 
+    <aside className={`transition-all duration-300 bg-gray-800 border-r border-gray-700 text-gray-200 h-screen ${collapsed ? 'w-16' : 'w-64'} flex-shrink-0`}> 
       <div className="h-16 flex items-center px-3 space-x-3">
         <button onClick={() => setCollapsed(!collapsed)} className="text-white focus:outline-none">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -81,7 +99,7 @@ export default function Sidebar() {
         {!collapsed && <span className="text-2xl font-bold">Industrium</span>}
       </div>
       <nav className="mt-4">
-        {links.map(({ label, icon: Icon, to, children }) => (
+        {filteredLinks.map(({ label, icon: Icon, to, children }) => (
           <div key={label} className="mb-1">
             {children ? (
               <button
@@ -89,9 +107,7 @@ export default function Sidebar() {
                 className="w-full flex items-center px-3 py-2 rounded hover:bg-gray-700 focus:outline-none"
               >
                 <Icon className="h-6 w-6 flex-shrink-0 transition-none" />
-                <span
-                  className={`ml-3 flex-1 text-left overflow-hidden whitespace-nowrap ${collapsed ? 'hidden' : ''}`}
-                >
+                <span className={`ml-3 flex-1 text-left overflow-hidden whitespace-nowrap ${collapsed ? 'hidden' : ''}`}>
                   {label}
                 </span>
                 {!collapsed && (
@@ -108,9 +124,7 @@ export default function Sidebar() {
                 }
               >
                 <Icon className="h-6 w-6 flex-shrink-0 transition-none" />
-                <span
-                  className={`ml-3 flex-1 text-left overflow-hidden whitespace-nowrap ${collapsed ? 'hidden' : ''}`}
-                >
+                <span className={`ml-3 flex-1 text-left overflow-hidden whitespace-nowrap ${collapsed ? 'hidden' : ''}`}>
                   {label}
                 </span>
               </NavLink>

@@ -27,16 +27,19 @@ export default function ProjectDetail() {
   }, [id]);
 
   const handleCommentSubmit = async e => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-    try {
-      await api.post('/project-comments/', { project: id, content: newComment });
-      setNewComment('');
-      fetchProject();
-    } catch {
-      setUploadError('Не вдалося додати коментар');
-    }
-  };
+  e.preventDefault();
+  if (!newComment.trim()) return;
+  try {
+    await api.post('/project-comments/', {
+    object_id: id,
+    content: newComment
+  });
+    setNewComment('');
+    fetchProject();
+  } catch {
+    setUploadError('Не вдалося додати коментар');
+  }
+};
 
   const handleFileUpload = async e => {
     e.preventDefault();

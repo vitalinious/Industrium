@@ -1,10 +1,11 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import get_user_model
 from .models import (Position, Department,
                      Project, Attachment,
-                     ProjectComment, Task,
+                     Comments, Task,
                      TaskNotification)
 
 import random
@@ -103,43 +104,24 @@ class EmployeeSerializer(serializers.ModelSerializer):
         return data
 
 
-class TaskSerializer(serializers.ModelSerializer):
-    creator_name = serializers.SerializerMethodField()
-    assignee_name = serializers.SerializerMethodField()
-    project_name = serializers.CharField(source='project.name', read_only=True)
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
 
-    class Meta:
-        model = Task
-        fields = [
-            'id', 'title', 'description',
-            'creator', 'creator_name',
-            'assignee', 'assignee_name',
-            'project', 'project_name',
-            'order','priority',
-            'status', 'status_display',
-            'created_at', 'due_date',
-        ]
-        read_only_fields = ['creator', 'creator_name', 'status_display', 'project_name', 'assignee_name', 'created_at']
-
-    def get_creator_name(self, obj):
-        return f"{obj.creator.last_name} {obj.creator.first_name}"
-
-    def get_assignee_name(self, obj):
-        return f"{obj.assignee.last_name} {obj.assignee.first_name}" if obj.assignee else None
-    
-    def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
-
-
-class ProjectCommentSerializer(serializers.ModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
     author_name = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(format="%d.%m.%Y %H:%M", read_only=True)
-    formatted_last_modified = serializers.ReadOnlyField()
+
+    content_type = serializers.PrimaryKeyRelatedField(
+        queryset=ContentType.objects.all(),
+        write_only=True,
+        required=False  # ← ключовий рядок
+    )
+    object_id = serializers.IntegerField(write_only=True)
 
     class Meta:
-        model = ProjectComment
-        fields = ['id', 'project', 'author', 'author_name', 'content', 'created_at', 'formatted_last_modified']
+        model = Comments
+        fields = [
+            'id', 'author', 'author_name', 'content',
+            'created_at', 'content_type', 'object_id'
+        ]
         read_only_fields = ['id', 'author', 'author_name', 'created_at']
 
     def get_author_name(self, obj):
@@ -153,12 +135,47 @@ class AttachmentSerializer(serializers.ModelSerializer):
         read_only_fields = ['uploaded_at', 'uploaded_by']
 
 
+from django.contrib.contenttypes.models import ContentType
+from .models import Comments
+from .serializers import CommentSerializer
+
+class TaskSerializer(serializers.ModelSerializer):
+    creator_name = serializers.SerializerMethodField()
+    assignee_name = serializers.SerializerMethodField()
+    project_name = serializers.CharField(source='project.name', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    comments = CommentSerializer(many=True, read_only=True)
+    files = AttachmentSerializer(many=True, read_only=True, source='attachment_set')
+
+    class Meta:
+        model = Task
+        fields = [
+            'id', 'title', 'description',
+            'creator', 'creator_name',
+            'assignee', 'assignee_name',
+            'project', 'project_name',
+            'order','priority',
+            'status', 'status_display',
+            'created_at', 'due_date',
+            'comments', 'files',
+        ]
+        read_only_fields = ['creator', 'creator_name', 'status_display', 'project_name', 'assignee_name', 'created_at']
+
+    def get_creator_name(self, obj):
+        return f"{obj.creator.last_name} {obj.creator.first_name}"
+
+    def get_assignee_name(self, obj):
+        return f"{obj.assignee.last_name} {obj.assignee.first_name}" if obj.assignee else None
+    
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)
+
 class ProjectSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     last_modified_by_name = serializers.SerializerMethodField()
     last_modified_at = serializers.DateTimeField(format="%d.%m.%Y %H:%M", read_only=True)
     tasks = TaskSerializer(many=True, read_only=True)
-    comments = ProjectCommentSerializer(many=True, read_only=True)
+    comments = serializers.SerializerMethodField()
     files = AttachmentSerializer(many=True, read_only=True, source='attachment_set')
     formatted_last_modified = serializers.ReadOnlyField()
 
@@ -180,19 +197,22 @@ class ProjectSerializer(serializers.ModelSerializer):
         if obj.last_modified_by:
             return f"{obj.last_modified_by.last_name} {obj.last_modified_by.first_name}"
         return None
+
+    def get_comments(self, obj):
+        content_type = ContentType.objects.get_for_model(obj.__class__)
+        comments = Comments.objects.filter(content_type=content_type, object_id=obj.id).order_by('-created_at')
+        return CommentSerializer(comments, many=True, context=self.context).data
+
     
 class TaskNotificationSerializer(serializers.ModelSerializer):
     task_title = serializers.CharField(source='task.title', read_only=True)
-    sender_name = serializers.CharField(source='sender.get_full_name', read_only=True)
     task_id = serializers.IntegerField(source='task.id', read_only=True)
+    sender_name = serializers.SerializerMethodField()
 
     class Meta:
         model = TaskNotification
-        fields = [
-            'id',
-            'task_id',
-            'task_title',
-            'sender_name',
-            'created_at',
-            'is_read',
-        ]
+        fields = ['id', 'task_id', 'task_title', 'sender_name', 'created_at']
+
+    def get_sender_name(self, obj):
+        return f"{obj.sender.last_name} {obj.sender.first_name}"
+        
