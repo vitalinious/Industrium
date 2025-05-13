@@ -35,6 +35,7 @@ export default function Sidebar() {
       to: '/task',
       children: [
         { label: 'Перегляд', to: '/task/tasks' },
+        { label: 'Мої задачі', to: '/task/myTasks' },
       ]
     },
     {

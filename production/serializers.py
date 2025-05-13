@@ -2,7 +2,10 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import get_user_model
-from .models import Position, Department, Project, Attachment, ProjectComment, Task
+from .models import (Position, Department,
+                     Project, Attachment,
+                     ProjectComment, Task,
+                     TaskNotification)
 
 import random
 import string
@@ -132,10 +135,11 @@ class TaskSerializer(serializers.ModelSerializer):
 class ProjectCommentSerializer(serializers.ModelSerializer):
     author_name = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(format="%d.%m.%Y %H:%M", read_only=True)
+    formatted_last_modified = serializers.ReadOnlyField()
 
     class Meta:
         model = ProjectComment
-        fields = ['id', 'project', 'author', 'author_name', 'content', 'created_at']
+        fields = ['id', 'project', 'author', 'author_name', 'content', 'created_at', 'formatted_last_modified']
         read_only_fields = ['id', 'author', 'author_name', 'created_at']
 
     def get_author_name(self, obj):
@@ -156,6 +160,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     tasks = TaskSerializer(many=True, read_only=True)
     comments = ProjectCommentSerializer(many=True, read_only=True)
     files = AttachmentSerializer(many=True, read_only=True, source='attachment_set')
+    formatted_last_modified = serializers.ReadOnlyField()
 
     class Meta:
         model = Project
@@ -164,7 +169,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             'start_date', 'end_date',
             'status', 'status_display',
             'last_modified_by_name', 'last_modified_at',
-            'tasks', 'comments', 'files'
+            'tasks', 'comments', 'files', 'formatted_last_modified'
         ]
         read_only_fields = [
             'id', 'status_display', 'last_modified_by_name',
@@ -175,3 +180,19 @@ class ProjectSerializer(serializers.ModelSerializer):
         if obj.last_modified_by:
             return f"{obj.last_modified_by.last_name} {obj.last_modified_by.first_name}"
         return None
+    
+class TaskNotificationSerializer(serializers.ModelSerializer):
+    task_title = serializers.CharField(source='task.title', read_only=True)
+    sender_name = serializers.CharField(source='sender.get_full_name', read_only=True)
+    task_id = serializers.IntegerField(source='task.id', read_only=True)
+
+    class Meta:
+        model = TaskNotification
+        fields = [
+            'id',
+            'task_id',
+            'task_title',
+            'sender_name',
+            'created_at',
+            'is_read',
+        ]

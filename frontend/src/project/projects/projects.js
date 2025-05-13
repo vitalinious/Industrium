@@ -4,14 +4,22 @@ import { Edit2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FilterPopover from '../filter';
 import useDeleteItem from '../../hooks/useDeleteItem';
+import useUserRole from '../../hooks/useUserRole';
 
 export default function Projects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
   const navigate = useNavigate();
+  const role = useUserRole();
 
   const formatDate = d => new Date(d).toLocaleDateString('uk-UA');
+
+  const formatDateTime = d => {
+    if (!d) return '—';
+    const date = new Date(d);
+    return isNaN(date) ? '—' : date.toLocaleString('uk-UA');
+  };
 
   useEffect(() => {
     (async () => {
@@ -41,12 +49,14 @@ export default function Projects() {
   return (
     <div className="pb-3 space-y-4">
       <div className="p-3 bg-white shadow rounded flex justify-between mb-2">
-        <button
-          className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
-          onClick={handleAdd}
-        >
-          Додати
-        </button>
+        {role === 'Manager' && (
+          <button
+            className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
+            onClick={handleAdd}
+          >
+            Додати
+          </button>
+        )}
         <FilterPopover onFilter={data => setProjects(data)} endpoint="projects" />
       </div>
 
@@ -69,7 +79,9 @@ export default function Projects() {
               <th className="px-4 py-2">Початок</th>
               <th className="px-4 py-2">Закінчення</th>
               <th className="px-4 py-2">Статус</th>
-              <th className="px-4 py-2 text-right whitespace-nowrap">Дії</th>
+              {role === 'Manager' && (
+                <th className="px-4 py-2 text-right whitespace-nowrap">Дії</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -85,38 +97,40 @@ export default function Projects() {
                   {proj.last_modified_by_name || '—'}
                   <br />
                   <span className="text-xs text-gray-500">
-                    {proj.last_modified_at ? formatDate(proj.last_modified_at) : ''}
+                    {proj.formatted_last_modified || '—'}
                   </span>
                 </td>
                 <td className="px-4 py-3">{formatDate(proj.start_date)}</td>
                 <td className="px-4 py-3">{proj.end_date ? formatDate(proj.end_date) : '—'}</td>
                 <td className="px-4 py-3">{proj.status_display}</td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end items-center space-x-2">
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleEdit(proj.id);
-                      }}
-                      title="Редагувати"
-                      className="p-1 hover:bg-gray-700 rounded"
-                    >
-                      <Edit2 size={16} className="text-gray-400 hover:text-white" />
-                    </button>
+                {role === 'Manager' && (
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end items-center space-x-2">
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleEdit(proj.id);
+                        }}
+                        title="Редагувати"
+                        className="p-1 hover:bg-gray-700 rounded"
+                      >
+                        <Edit2 size={16} className="text-gray-400 hover:text-white" />
+                      </button>
 
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        deleteItem(proj.id);
-                      }}
-                      disabled={deleting}
-                      className="p-1 hover:bg-red-50 rounded"
-                      title="Видалити"
-                    >
-                      <X size={16} className="text-red-500 hover:text-red-700" />
-                    </button>
-                  </div>
-                </td>
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          deleteItem(proj.id);
+                        }}
+                        disabled={deleting}
+                        className="p-1 hover:bg-red-50 rounded"
+                        title="Видалити"
+                      >
+                        <X size={16} className="text-red-500 hover:text-red-700" />
+                      </button>
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

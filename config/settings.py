@@ -38,10 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'production',
     'corsheaders',
     'rest_framework.authtoken',
     'rest_framework',
+    'production.apps.ProductionConfig'
 ]
 
 REST_FRAMEWORK = {
@@ -140,6 +140,7 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+TIME_ZONE = 'Europe/Kyiv'
 
 
 # Static files (CSS, JavaScript, Images)

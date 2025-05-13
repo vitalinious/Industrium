@@ -27,6 +27,7 @@ import Tasks             from      './task/tasks/tasks'
 import CreateTask        from      './task/tasks/add'
 import EditTask          from      './task/tasks/edit'
 import TaskReview        from      './task/tasks/review';
+import MyTasks           from      './task/myTasks';
 
 export default function App() {
   return (
@@ -59,6 +60,7 @@ export default function App() {
 
           <Route path="task/tasks"                        element={<Tasks />} />
           <Route path="task/tasks/add"                    element={<CreateTask />} />
+          <Route path="task/myTasks"                      element={<MyTasks />} />
           <Route path="task/tasks/edit/:id"               element={<EditTask />} />
           <Route path="task/tasks/:id"                    element={<TaskReview />} />
 

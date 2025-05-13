@@ -7,7 +7,8 @@ from .views import (CustomTokenView, ProfileView,
                     TaskViewSet,
                     suggest_positions, suggest_departments,
                     suggest_employees, suggest_project,
-                    suggest_employees_filtered)
+                    suggest_employees_filtered, my_tasks,
+                    unread_notifications)
 
 router = DefaultRouter()
 router.register(r'positions',       PositionViewSet,            basename='position')
@@ -16,7 +17,7 @@ router.register(r'employees',       EmployeeViewSet,            basename='user')
 router.register(r'projects',        ProjectViewSet,             basename='project')
 router.register(r'project-comments',ProjectCommentViewSet,      basename='projectcomment')
 router.register(r'attachments',     AttachmentViewSet)
-router.register(r'tasks', TaskViewSet)
+router.register(r'tasks',           TaskViewSet,                basename='tasks')
 
 urlpatterns = [
     path('api/token/',              CustomTokenView.as_view(),  name='token_obtain_pair'),
@@ -27,6 +28,8 @@ urlpatterns = [
     path('employees/suggest/',      suggest_employees,          name='employees-suggest'),
     path('projects/suggest/',       suggest_project,            name='projects-suggest'),
     path('employees/filtered/',     suggest_employees_filtered, name='suggest-employees-filtered'),
+    path('tasks/my/',               my_tasks,                   name='my-tasks'),
+    path('notifications/unread/',   unread_notifications,       name='unread-notifications'),
     
     path('', include(router.urls)),
 ]

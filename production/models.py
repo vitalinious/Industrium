@@ -4,6 +4,7 @@ from datetime import date
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.utils.timezone import localtime
 
 # === Довідкові таблиці ===
 class Department(models.Model):
@@ -60,6 +61,7 @@ class Project(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Planned', db_index=True)
     last_modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='modified_projects')
     last_modified_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     
 
     def save(self, *args, **kwargs):
@@ -81,6 +83,15 @@ class Project(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    @property
+    def formatted_last_modified(self):
+        if self.last_modified_at:
+            return localtime(self.last_modified_at).strftime('%d.%m.%Y %H:%M')
+        return ''
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -136,6 +147,8 @@ class Task(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Planned', db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     due_date = models.DateField(null=True, blank=True)
+    is_done = models.BooleanField(default=False)
+    is_confirmed = models.BooleanField(default=False)
 
     class Meta:
         indexes = [
@@ -265,3 +278,10 @@ class EmployeePerformance(models.Model):
 
     def __str__(self):
         return f"{self.employee.username} - {self.date} - {self.efficiency_score}%"
+    
+class TaskNotification(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='notifications')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_notifications')
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_notifications')
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)

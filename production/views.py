@@ -1,22 +1,23 @@
 from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import CustomTokenObtainPairSerializer
 
+
 from .serializers import (
     ProfileSerializer,
     PositionSerializer, DepartmentSerializer,
     EmployeeSerializer, ProjectSerializer,
     TaskSerializer, ProjectCommentSerializer,
-    AttachmentSerializer
+    AttachmentSerializer, TaskNotificationSerializer
 )
 
-from .models import Position, Department, Project, Task, ProjectComment, Attachment
+from .models import Position, Department, Project, Task, ProjectComment, Attachment, TaskNotification
 from .permissions import IsManagerOrReadOnly
 from django.contrib.auth import get_user_model
 
@@ -104,7 +105,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [IsManagerOrReadOnly]
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = super().get_queryset().order_by('-created_at')
         params = self.request.query_params
 
         dept = params.get('department')
@@ -179,6 +180,58 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def mark_done(self, request, pk=None):
+        task = self.get_object()
+        if request.user != task.assignee:
+            return Response({'detail': 'Access denied'}, status=403)
+        task.is_done = True
+        task.save()
+        return Response({'detail': 'Позначено як виконано'})
+
+    @action(detail=True, methods=['post'], url_path='submit-complete', permission_classes=[IsAuthenticated])
+    def submit_complete(self, request, pk=None):
+        task = self.get_object()
+
+        if request.user != task.assignee:
+            return Response({'detail': 'Недостатньо прав'}, status=403)
+
+        if task.status == 'Completed':
+            return Response({'detail': 'Задача вже підтверджена'}, status=400)
+        
+        # Тут логіка менеджера (тимчасово можна задати просто superuser або staff)
+        manager = User.objects.filter(is_staff=True).first()
+        if not manager:
+            return Response({'detail': 'Керівника не знайдено'}, status=400)
+
+        # Створюємо сповіщення
+        TaskNotification.objects.create(
+            task=task,
+            sender=request.user,
+            recipient=manager,
+        )
+
+        # Змінюємо статус задачі
+        task.status = 'PendingConfirmation'
+        task.save(update_fields=['status'])
+
+        return Response({'status': 'submitted на підтвердження'})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def confirm_done(self, request, pk=None):
+        task = self.get_object()
+
+        if not request.user.groups.filter(name='Manager').exists():
+            return Response({'detail': 'Лише керівник може підтвердити'}, status=403)
+
+        task.status = 'Completed'
+        task.save(update_fields=['status'])
+
+        # Позначаємо всі пов’язані сповіщення як прочитані
+        TaskNotification.objects.filter(task=task, recipient=request.user).update(is_read=True)
+
+        return Response({'status': 'confirmed'})
         
 class ProjectCommentViewSet(viewsets.ModelViewSet):
     queryset = ProjectComment.objects.all()
@@ -257,3 +310,16 @@ def suggest_employees_filtered(request):
 
     data = [{'id': u.id, 'name': f"{u.last_name} {u.first_name}"} for u in qs]
     return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_tasks(request):
+    tasks = Task.objects.filter(assignee=request.user)
+    serializer = TaskSerializer(tasks, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def unread_notifications(request):
+    qs = TaskNotification.objects.filter(recipient=request.user, is_read=False)
+    return Response(TaskNotificationSerializer(qs, many=True).data)
