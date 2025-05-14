@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import CustomTokenObtainPairSerializer
 from django.contrib.contenttypes.models import ContentType
+from rest_framework.exceptions import ValidationError
 
 
 from .serializers import (
@@ -138,6 +139,23 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(last_modified_by=self.request.user)
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def complete(self, request, pk=None):
+        project = self.get_object()
+
+        # Перевірка ролі
+        if not User.objects.filter(role='Manager'):
+            return Response({'detail': 'Тільки керівник може завершити проєкт'}, status=403)
+
+        # Перевірка на наявність активних задач
+        active_tasks = Task.objects.filter(project=project).exclude(status='Completed')
+        if active_tasks.exists():
+            return Response({'detail': 'Неможливо завершити проєкт: є незавершені задачі'}, status=400)
+
+        project.status = 'Completed'
+        project.save()
+        return Response({'status': 'completed'})
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -232,6 +250,29 @@ class TaskViewSet(viewsets.ModelViewSet):
         TaskNotification.objects.filter(task=task).update(is_read=True)
 
         return Response({'status': 'confirmed'})
+    
+    @action(detail=True, methods=['post'], url_path='confirm-complete')
+    def confirm_complete(self, request, pk=None):
+        task = self.get_object()
+        task.status = 'Completed'
+        task.save()
+
+        # видалити всі сповіщення про задачу
+        TaskNotification.objects.filter(task=task).delete()
+
+        return Response({'status': 'confirmed'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='reject-complete')
+    def reject_complete(self, request, pk=None):
+        task = self.get_object()
+        reason = request.data.get('reason', '')
+        task.status = 'InProgress'
+        task.save()
+
+        TaskNotification.objects.filter(task=task).delete()
+
+        # можна зберегти reason в окрему модель або лог
+        return Response({'status': 'rejected', 'reason': reason}, status=status.HTTP_200_OK)
         
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets
@@ -284,8 +325,34 @@ class AttachmentViewSet(viewsets.ModelViewSet):
     serializer_class = AttachmentSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        serializer.save(uploaded_by=self.request.user)
+    def create(self, request, *args, **kwargs):
+        print("🔹 Incoming data:", request.data)
+
+        model = request.data.get('content_type_model')
+        app = request.data.get('content_type_app')
+        object_id = request.data.get('object_id')
+
+        if not all([model, app, object_id]):
+            raise ValidationError('Missing required fields')
+
+        try:
+            ct = ContentType.objects.get(app_label=app, model=model)
+        except ContentType.DoesNotExist:
+            raise ValidationError('Invalid content_type')
+
+        # створюємо змінювану копію request.data
+        data = request.data.copy()
+        data['content_type'] = ct.id
+        data['object_id'] = object_id
+
+        serializer = self.get_serializer(data=data)
+        if not serializer.is_valid():
+            print("❌ Serializer errors:", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save(uploaded_by=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -363,3 +430,64 @@ def unread_notifications(request):
                                  .select_related('task', 'sender')\
                                  .order_by('-created_at')
     return Response(TaskNotificationSerializer(qs, many=True).data)
+
+from django.db.models import Count, Q
+from datetime import datetime, timedelta
+from django.utils import timezone
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_summary(request):
+    today = timezone.now().date()
+    start_of_month = today.replace(day=1)
+
+    tasks = Task.objects.filter(created_at__date__gte=start_of_month)
+
+    tasks_done = tasks.filter(status='Completed').count()
+    tasks_in_progress = tasks.filter(status='InProgress').count()
+    tasks_overdue = tasks.filter(status='PendingConfirmation', due_date__lt=today).count()
+    
+    uncompleted_tasks_count = tasks.filter(status__in=['InProgress', 'PendingConfirmation']).count()
+    projects = Project.objects.filter(status__in=['InProgress', 'Planned'])
+    projects_progress = []
+    
+    for project in projects:
+        total = Task.objects.filter(project=project).count()
+        completed = Task.objects.filter(project=project, status='Completed').count()
+        percent = round((completed / total * 100), 1) if total > 0 else 0
+        projects_progress.append({
+            'id': project.id,
+            'name': project.name,
+            'percent': percent
+        })
+
+    # Групування по тижнях
+    weekly_tasks = []
+    for i in range(4):
+        week_start = start_of_month + timedelta(weeks=i)
+        week_end = week_start + timedelta(days=6)
+        count = tasks.filter(created_at__date__range=(week_start, week_end)).count()
+        weekly_tasks.append({"week": f"{i+1} тиждень", "tasks": count})
+
+    active_projects = Project.objects.filter(status__in=['InProgress', 'Planned'], start_date__gte=start_of_month).count()
+    completed_projects = Project.objects.filter(status='Completed', end_date__gte=start_of_month).count()
+
+    # Найближчі задачі (до дедлайну менше 7 днів)
+    deadline_threshold = today + timedelta(days=7)
+    upcoming = Task.objects.filter(
+        due_date__lte=deadline_threshold,
+        due_date__gte=today,
+    ).select_related('assignee')
+    upcoming_serialized = TaskSerializer(upcoming, many=True, context={'request': request}).data
+
+    return Response({
+        "tasks_done": tasks_done,
+        "tasks_in_progress": tasks_in_progress,
+        "tasks_overdue": tasks_overdue,
+        "weekly_tasks": weekly_tasks,
+        "active_projects": active_projects,
+        "completed_projects": completed_projects,
+        "upcoming_tasks": upcoming_serialized,
+        "uncompleted_tasks_count": uncompleted_tasks_count,
+        "projects_progress": projects_progress,
+    })

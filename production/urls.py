@@ -8,7 +8,8 @@ from .views import (CustomTokenView, ProfileView,
                     suggest_positions, suggest_departments,
                     suggest_employees, suggest_project,
                     suggest_employees_filtered, my_tasks,
-                    unread_notifications)
+                    unread_notifications, dashboard_summary,
+                    )
 
 router = DefaultRouter()
 router.register(r'positions',       PositionViewSet,            basename='position')
@@ -31,6 +32,7 @@ urlpatterns = [
     path('employees/filtered/',     suggest_employees_filtered, name='suggest-employees-filtered'),
     path('tasks/my/',               my_tasks,                   name='my-tasks'),
     path('notifications/unread/',   unread_notifications,       name='unread-notifications'),
+    path('dashboard/summary/',      dashboard_summary,          name='dashboard-summary'),
     
     path('', include(router.urls)),
 ]

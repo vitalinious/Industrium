@@ -134,7 +134,6 @@ class AttachmentSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['uploaded_at', 'uploaded_by']
 
-
 from django.contrib.contenttypes.models import ContentType
 from .models import Comments
 from .serializers import CommentSerializer
@@ -145,7 +144,7 @@ class TaskSerializer(serializers.ModelSerializer):
     project_name = serializers.CharField(source='project.name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
-    files = AttachmentSerializer(many=True, read_only=True, source='attachment_set')
+    files = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -169,14 +168,34 @@ class TaskSerializer(serializers.ModelSerializer):
     
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
+        
+    def get_files(self, obj):
+        ct = ContentType.objects.get_for_model(Task)
+        attachments = Attachment.objects.filter(content_type=ct, object_id=obj.id)
+        return AttachmentSimpleSerializer(attachments, many=True, context=self.context).data
 
+class AttachmentSimpleSerializer(serializers.ModelSerializer):
+    uploaded_by = serializers.StringRelatedField()
+    uploaded_by_id = serializers.IntegerField(source='uploaded_by.id')
+    file = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Attachment
+        fields = ['id', 'file', 'description', 'uploaded_by', 'uploaded_by_id']
+
+    def get_file(self, obj):
+        request = self.context.get('request')
+        if request is not None:
+            return request.build_absolute_uri(obj.file.url)
+        return obj.file.url
+        
 class ProjectSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     last_modified_by_name = serializers.SerializerMethodField()
     last_modified_at = serializers.DateTimeField(format="%d.%m.%Y %H:%M", read_only=True)
     tasks = TaskSerializer(many=True, read_only=True)
     comments = serializers.SerializerMethodField()
-    files = AttachmentSerializer(many=True, read_only=True, source='attachment_set')
+    files = serializers.SerializerMethodField()
     formatted_last_modified = serializers.ReadOnlyField()
 
     class Meta:
@@ -202,6 +221,11 @@ class ProjectSerializer(serializers.ModelSerializer):
         content_type = ContentType.objects.get_for_model(obj.__class__)
         comments = Comments.objects.filter(content_type=content_type, object_id=obj.id).order_by('-created_at')
         return CommentSerializer(comments, many=True, context=self.context).data
+    
+    def get_files(self, obj):
+        ct = ContentType.objects.get_for_model(Project)
+        attachments = Attachment.objects.filter(content_type=ct, object_id=obj.id)
+        return AttachmentSimpleSerializer(attachments, many=True, context=self.context).data
 
     
 class TaskNotificationSerializer(serializers.ModelSerializer):

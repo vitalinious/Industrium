@@ -16,6 +16,9 @@ export default function CreateTask() {
   const [projectId, setProjectId]   = useState('');
   const [dueDate, setDueDate]       = useState(null);
 
+  const [projectStart, setProjectStart] = useState(null);
+  const [projectEnd, setProjectEnd] = useState(null);
+
   const [departmentId, setDepartmentId] = useState('');
   const [positionId, setPositionId]     = useState('');
   const [assigneeId, setAssigneeId]     = useState('');
@@ -54,6 +57,19 @@ export default function CreateTask() {
       setAssigneeId('');
     }
   }, [positionId]);
+
+  useEffect(() => {
+    if (projectId) {
+      const selected = projects.find(p => p.id.toString() === projectId);
+      if (selected) {
+        setProjectStart(new Date(selected.start_date));
+        setProjectEnd(new Date(selected.end_date));
+      }
+    } else {
+      setProjectStart(null);
+      setProjectEnd(null);
+    }
+  }, [projectId, projects]);
 
   const attachRequiredMsg = e => e.target.setCustomValidity('Обов’язкове поле');
   const clearRequiredMsg = e => e.target.setCustomValidity('');
@@ -192,6 +208,8 @@ export default function CreateTask() {
               onChange={setDueDate}
               className="w-full border px-3 py-2 rounded"
               placeholderText="дд.мм.рррр"
+              minDate={projectStart}
+              maxDate={projectEnd}
             />
           </div>
         </div>

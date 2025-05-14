@@ -33,7 +33,7 @@ export default function Sidebar() {
       icon: ChartPieIcon,
       to: '/dashboard',
       children: [
-        { label: 'Огляд', to: '/dashboard/overview' },
+        { label: 'Огляд', to: '/dashboard/overview/dashboard' },
         { label: 'Статистика', to: '/dashboard/stats' },
       ]
     },

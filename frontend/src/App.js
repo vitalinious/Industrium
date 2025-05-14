@@ -29,6 +29,8 @@ import EditTask          from      './task/tasks/edit'
 import TaskReview        from      './task/tasks/review';
 import MyTasks           from      './task/myTasks';
 
+import DashboardOverview from      './dashboard/overview/dashboard';
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -63,6 +65,10 @@ export default function App() {
           <Route path="task/myTasks"                      element={<MyTasks />} />
           <Route path="task/tasks/edit/:id"               element={<EditTask />} />
           <Route path="task/tasks/:id"                    element={<TaskReview />} />
+
+          <Route path="dashboard/overview/dashboard"      element={<DashboardOverview />} />
+
+
 
         </Route>
 
