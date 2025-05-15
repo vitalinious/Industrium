@@ -473,7 +473,7 @@ def dashboard_summary(request):
     completed_projects = Project.objects.filter(status='Completed', end_date__gte=start_of_month).count()
 
     # Найближчі задачі (до дедлайну менше 7 днів)
-    deadline_threshold = today + timedelta(days=7)
+    deadline_threshold = today + timedelta(days=30)
     upcoming = Task.objects.filter(
         due_date__lte=deadline_threshold,
         due_date__gte=today,

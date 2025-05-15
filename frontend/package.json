@@ -4,6 +4,9 @@
   "proxy": "http://127.0.0.1:8000",
   "private": true,
   "dependencies": {
+    "@fullcalendar/core": "^5.11.5",
+    "@fullcalendar/daygrid": "^5.11.3",
+    "@fullcalendar/react": "^5.11.3",
     "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/vite": "^4.1.5",
