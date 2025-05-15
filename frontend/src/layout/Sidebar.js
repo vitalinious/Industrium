@@ -34,7 +34,6 @@ export default function Sidebar() {
       to: '/dashboard',
       children: [
         { label: 'Огляд', to: '/dashboard/overview/dashboard' },
-        { label: 'Статистика', to: '/dashboard/stats' },
       ]
     },
     {
@@ -43,7 +42,6 @@ export default function Sidebar() {
       to: '/project',
       children: [
         { label: 'Усі проєкти', to: '/project/projects' },
-        { label: 'Мої проєкти', to: '/project/mine' },
       ]
     },
     {
@@ -56,17 +54,6 @@ export default function Sidebar() {
           : []),
         { label: 'Мої задачі', to: '/task/myTasks' },
       ]
-    },
-    {
-      label: 'Аналітика',
-      icon: ChartBarIcon,
-      to: '/analytics',
-      children: role === 'Manager'
-        ? [
-            { label: 'Звіти', to: '/analytics/reports' },
-            { label: 'Порівняння', to: '/analytics/comparison' },
-          ]
-        : []
     },
     {
       label: 'Підрозділ',

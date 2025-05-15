@@ -67,9 +67,6 @@ export default function App() {
           <Route path="task/tasks/:id"                    element={<TaskReview />} />
 
           <Route path="dashboard/overview/dashboard"      element={<DashboardOverview />} />
-
-
-
         </Route>
 
         {/* Усі інші шляхи редіректять на логін */}
