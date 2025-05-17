@@ -18,20 +18,9 @@ export default function Login() {
       username,
       password
     });
-      // Зберігаємо токени
       localStorage.setItem('access_token', data.access);
       localStorage.setItem('refresh_token', data.refresh);
 
-      // Декодуємо роль
-      const decoded = jwtDecode(data.access);
-      console.log('TOKEN DEBUG:', decoded);
-      const role = decoded.role;
-      console.log('Роль користувача:', role);
-
-      // За потреби збережи роль окремо (не обов’язково)
-      // localStorage.setItem('user_role', role);
-
-      // Перенаправлення після входу
       navigate('/department/account');
     } catch (err) {
       setError('Невірний логін або пароль');

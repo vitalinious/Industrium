@@ -75,7 +75,6 @@ export default function ProjectDetail() {
       setUploadSuccess('Файл успішно додано ✅');
       setUploadError('');
       fetchProject();
-        // автоматично ховати повідомлення через 5 сек
       setTimeout(() => setUploadSuccess(''), 5000);
     } catch (error) {
       console.error(error.response?.data || error.message);
@@ -249,11 +248,19 @@ export default function ProjectDetail() {
             </div>
 
             <form onSubmit={handleFileUpload} className="mt-3 space-y-2">
-              <input
-                type="file"
-                onChange={e => setNewFile(e.target.files[0])}
-                className="text-sm"
-              />
+              <div className="relative">
+                <label className="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded cursor-pointer inline-block">
+                  Оберіть файл
+                  <input
+                    type="file"
+                    onChange={e => setNewFile(e.target.files[0])}
+                    className="absolute left-0 top-0 opacity-0 w-full h-full cursor-pointer"
+                  />
+                </label>
+                <span className="ml-3 text-sm text-gray-600">
+                  {newFile ? newFile.name : 'Файл не обрано'}
+                </span>
+              </div>
               <button
                 type="submit"
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"

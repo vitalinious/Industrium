@@ -166,9 +166,19 @@ class TaskViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         params = self.request.query_params
+        
+        ids = params.get('ids')
+        if ids:
+            id_list = [int(i) for i in ids.split(',') if i.isdigit()]
+            qs = qs.filter(id__in=id_list)
+        
+        title = params.get('title')
+        if title:
+            qs = qs.filter(title__icontains=title)
 
         project = params.get('project')
         if project:
+            ids = [int(i) for i in project.split(',') if i.isdigit()]
             qs = qs.filter(project_id=project)
 
         order = params.get('order')
@@ -181,19 +191,24 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         assignee = params.get('assignee')
         if assignee:
-            qs = qs.filter(assignee_id=assignee)
+            ids = [int(i) for i in assignee.split(',') if i.isdigit()]
+            qs = qs.filter(assignee_id__in=ids)
 
         priority = params.get('priority')
         if priority:
             qs = qs.filter(priority=priority)
 
-        created_from = params.get('created_from')
-        if created_from:
-            qs = qs.filter(created_at__date__gte=created_from)
+        start_from = params.get('start_from')
+        if start_from:
+            qs = qs.filter(created_at__date__gte=start_from)
 
         created_to = params.get('created_to')
         if created_to:
             qs = qs.filter(created_at__date__lte=created_to)
+            
+        due_to = params.get('due_to')
+        if due_to:
+            qs = qs.filter(due_date__lte=due_to)
 
         return qs
 
@@ -219,7 +234,6 @@ class TaskViewSet(viewsets.ModelViewSet):
         if task.status == 'Completed':
             return Response({'detail': 'Задача вже підтверджена'}, status=400)
         
-        # Тут логіка менеджера (тимчасово можна задати просто superuser або staff)
         managers = User.objects.filter(role='Manager')
         if not managers.exists():
             return Response({'detail': 'Керівників не знайдено'}, status=400)
@@ -231,11 +245,11 @@ class TaskViewSet(viewsets.ModelViewSet):
                 recipient=manager,
             )
 
-        # Змінюємо статус задачі
         task.status = 'PendingConfirmation'
         task.save(update_fields=['status'])
 
         return Response({'status': 'submitted на підтвердження'})
+    
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def confirm_done(self, request, pk=None):
@@ -326,7 +340,7 @@ class AttachmentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        print("🔹 Incoming data:", request.data)
+        # print("🔹 Incoming data:", request.data)
 
         model = request.data.get('content_type_model')
         app = request.data.get('content_type_app')
@@ -491,3 +505,12 @@ def dashboard_summary(request):
         "uncompleted_tasks_count": uncompleted_tasks_count,
         "projects_progress": projects_progress,
     })
+
+@api_view(['GET'])
+def suggest_tasks(request):
+    title_query = request.GET.get('title', '')
+    if title_query:
+        tasks = Task.objects.filter(title__icontains=title_query)[:10]
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data)
+    return Response([])

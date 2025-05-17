@@ -43,7 +43,7 @@ export default function DashboardOverview() {
 
   const calendarEvents = stats.upcoming_tasks?.map(task => ({
     title: task.title || 'Без назви',
-    date: task.due_date?.slice(0, 10), // ключовий момент
+    date: task.due_date?.slice(0, 10),
     color:
       task.status === 'Completed' ? '#008556' :
       task.status === 'InProgress' ? '#FFBB28' :
@@ -53,8 +53,6 @@ export default function DashboardOverview() {
   return (
     <div className="p-4 space-y-4">
       
-
-      {/* Верхня статистика без "невиконаних задач" */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         <div className="bg-white p-3 rounded shadow text-center">
           <div className="text-green-500 text-sm">✅ Виконано задач</div>
@@ -74,9 +72,7 @@ export default function DashboardOverview() {
         </div>
       </div>
 
-      {/* Два блоки поруч: графік та календар */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Статус задач */}
         <div className="bg-white p-4 rounded shadow">
           <div className="font-semibold mb-2 text-lg">📌 Статус задач</div>
           <ResponsiveContainer width="100%" height={600}>
@@ -97,8 +93,7 @@ export default function DashboardOverview() {
             </PieChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Календар дедлайнів */}
+        
         <div className="bg-white p-4 rounded shadow">
           <div className="font-semibold mb-2 text-lg">📅 Календар дедлайнів</div>
           <FullCalendar
@@ -112,7 +107,6 @@ export default function DashboardOverview() {
         </div>
       </div>
 
-      {/* Прогрес проєктів — під низом */}
       <div className="bg-white p-4 rounded shadow">
         <div className="font-semibold text-lg mb-2">📈 Прогрес проєктів</div>
         <ul className="space-y-2 text-sm">

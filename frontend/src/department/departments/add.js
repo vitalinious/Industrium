@@ -38,7 +38,7 @@ export default function CreateDepartment() {
             <div className="flex space-x-4">
               <button
                 type="submit"
-                className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-800"
+                className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
               >
                 Зберегти
               </button>

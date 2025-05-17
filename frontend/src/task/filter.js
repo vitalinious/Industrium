@@ -1,3 +1,4 @@
+// 💡 TaskFilterPopover з автодоповненням для назви задачі, відповідального та проєкту (оновлено для мультивибору)
 import React, { useState, useEffect } from 'react';
 import { Popover } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
@@ -9,42 +10,68 @@ import 'react-datepicker/dist/react-datepicker.css';
 
 registerLocale('uk', uk);
 
-export default function ProjectFilterPopover({ onFilter }) {
-  const [nameQuery, setNameQuery] = useState('');
-  const [nameSuggestions, setSuggestions] = useState([]);
+export default function TaskFilterPopover({ onFilter }) {
+  const [titleQuery, setTitleQuery] = useState('');
+  const [titleSuggestions, setTitleSuggestions] = useState([]);
+  const [selectedTitles, setSelectedTitles] = useState([]);
+
+  const [assigneeQuery, setAssigneeQuery] = useState('');
+  const [assigneeSuggestions, setAssigneeSuggestions] = useState([]);
+  const [selectedAssignees, setSelectedAssignees] = useState([]);
+
+  const [projectQuery, setProjectQuery] = useState('');
+  const [projectSuggestions, setProjectSuggestions] = useState([]);
   const [selectedProjects, setSelectedProjects] = useState([]);
+
   const [statuses, setStatuses] = useState([]);
-  const [startFrom, setStartFrom] = useState('');
-  const [startTo, setStartTo] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [dueDate, setDueDate] = useState('');
 
   const STATUS_OPTIONS = [
-    { value: 'Planned', label: 'Заплановано' },
     { value: 'InProgress', label: 'В роботі' },
-    { value: 'Completed', label: 'Завершено' }
+    { value: 'Completed', label: 'Завершено' },
+    { value: 'PendingConfirmation', label: 'Очікує підтвердження' },
   ];
 
   useEffect(() => {
     const t = setTimeout(() => {
-      if (nameQuery) {
-        api.get(`/projects/suggest/?name=${nameQuery}`)
-          .then(res => setSuggestions(res.data))
-          .catch(() => setSuggestions([]));
+      if (titleQuery) {
+        api.get(`/tasks/suggest/?title=${titleQuery}`)
+          .then(res => setTitleSuggestions(res.data))
+          .catch(() => setTitleSuggestions([]));
       } else {
-        setSuggestions([]);
+        setTitleSuggestions([]);
       }
     }, 300);
     return () => clearTimeout(t);
-  }, [nameQuery]);
+  }, [titleQuery]);
 
-  const handleSelectProject = item => {
-    if (!selectedProjects.find(p => p.id === item.id)) {
-      setSelectedProjects(prev => [...prev, item]);
-    }
-    setNameQuery('');
-    setSuggestions([]);
-  };
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (assigneeQuery) {
+        api.get(`/employees/suggest/?name=${assigneeQuery}`)
+          .then(res => setAssigneeSuggestions(res.data))
+          .catch(() => setAssigneeSuggestions([]));
+      } else {
+        setAssigneeSuggestions([]);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [assigneeQuery]);
 
-  const removeProject = idx => setSelectedProjects(prev => prev.filter((_, i) => i !== idx));
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (projectQuery) {
+        api.get(`/projects/suggest/?name=${projectQuery}`)
+          .then(res => setProjectSuggestions(res.data))
+          .catch(() => setProjectSuggestions([]));
+      } else {
+        setProjectSuggestions([]);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [projectQuery]);
+
   const toggleStatus = status => {
     setStatuses(prev =>
       prev.includes(status)
@@ -54,27 +81,41 @@ export default function ProjectFilterPopover({ onFilter }) {
   };
 
   const clearAll = () => {
-    setSelectedProjects([]);
+    setSelectedTitles([]);
+    setTitleQuery('');
     setStatuses([]);
-    setStartFrom('');
-    setStartTo('');
+    setSelectedProjects([]);
+    setProjectQuery('');
+    setSelectedAssignees([]);
+    setAssigneeQuery('');
+    setStartDate('');
+    setDueDate('');
   };
 
   const applyFilter = async () => {
     try {
       const params = {};
-      if (selectedProjects.length) {
-        params.ids = selectedProjects.map(p => p.id).join(',');
-      }
+      if (selectedTitles.length) params.ids = selectedTitles.map(t => t.id).join(',');
       if (statuses.length) params.status = statuses.join(',');
-      if (startFrom) params.start_from = startFrom.toISOString().slice(0, 10);
-      if (startTo) params.start_to = startTo.toISOString().slice(0, 10);
+      if (selectedProjects.length) params.project = selectedProjects.map(p => p.id).join(',');
+      if (selectedAssignees.length) params.assignee = selectedAssignees.map(a => a.id).join(',');
+      if (startDate) params.start_from = startDate.toISOString().slice(0, 10);
+      if (dueDate) params.due_to = dueDate.toISOString().slice(0, 10);
 
-      const { data } = await api.get('/projects/', { params });
+      const { data } = await api.get('tasks/', { params });
       onFilter(data);
     } catch (err) {
       console.error('Filter error', err);
     }
+  };
+
+  const handleSelect = (item, setSelected, setQuery) => {
+    setSelected(prev => prev.find(p => p.id === item.id) ? prev : [...prev, item]);
+    setQuery('');
+  };
+
+  const handleRemove = (index, setSelected) => {
+    setSelected(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -83,36 +124,30 @@ export default function ProjectFilterPopover({ onFilter }) {
         Фільтри <ChevronDownIcon className="w-4 h-4 ml-1" />
       </Popover.Button>
 
-      <Popover.Panel className="absolute right-0 z-20 mt-2 w-80 bg-white p-4 rounded shadow-lg border">
-        <label className="block text-sm mb-1">Назва проєкту</label>
+      <Popover.Panel className="absolute right-0 z-20 mt-2 w-96 bg-white p-4 rounded shadow-lg border">
+        <label className="block text-sm mb-1">Назва задачі</label>
         <input
           type="text"
-          value={nameQuery}
-          onChange={e => setNameQuery(e.target.value)}
+          value={titleQuery}
+          onChange={e => setTitleQuery(e.target.value)}
           className="w-full p-2 border rounded mb-2"
           placeholder="Пошук за назвою..."
         />
-        {nameSuggestions.length > 0 && (
-          <ul className="max-h-32 overflow-y-auto border rounded mb-2">
-            {nameSuggestions.map((p, i) => (
-              <li
-                key={i}
-                onClick={() => handleSelectProject(p)}
-                className="px-3 py-1 hover:bg-gray-100 cursor-pointer"
-              >
-                {p.name}
-              </li>
-            ))}
-          </ul>
-        )}
-        {selectedProjects.length > 0 && (
+        <ul className="max-h-32 overflow-y-auto border rounded mb-2">
+          {titleSuggestions.map((task, i) => (
+            <li key={i} onClick={() => handleSelect(task, setSelectedTitles, setTitleQuery)} className="px-3 py-1 hover:bg-gray-100 cursor-pointer">
+              {task.title}
+            </li>
+          ))}
+        </ul>
+        {selectedTitles.length > 0 && (
           <div className="mb-3">
             <div className="text-xs font-medium text-gray-600">Обрано:</div>
             <ul className="space-y-1">
-              {selectedProjects.map((p, i) => (
+              {selectedTitles.map((t, i) => (
                 <li key={i} className="flex justify-between bg-gray-100 px-2 py-1 rounded">
-                  {p.name}
-                  <button onClick={() => removeProject(i)} className="text-red-500 text-xs">✕</button>
+                  {t.title}
+                  <button onClick={() => handleRemove(i, setSelectedTitles)} className="text-red-500 text-xs">✕</button>
                 </li>
               ))}
             </ul>
@@ -139,25 +174,81 @@ export default function ProjectFilterPopover({ onFilter }) {
           </div>
         </div>
 
+        <div className="mb-3">
+          <label className="block text-sm mb-1">Відповідальний</label>
+          <input
+            type="text"
+            value={assigneeQuery}
+            onChange={e => setAssigneeQuery(e.target.value)}
+            className="w-full p-2 border rounded mb-2"
+            placeholder="Пошук працівника..."
+          />
+          <ul className="max-h-32 overflow-y-auto border rounded mb-2">
+            {assigneeSuggestions.map((a, i) => (
+              <li key={i} onClick={() => handleSelect(a, setSelectedAssignees, setAssigneeQuery)} className="px-3 py-1 hover:bg-gray-100 cursor-pointer">
+                {a.full_name}
+              </li>
+            ))}
+          </ul>
+          {selectedAssignees.length > 0 && (
+            <ul className="space-y-1 mb-3">
+              {selectedAssignees.map((a, i) => (
+                <li key={i} className="flex justify-between bg-gray-100 px-2 py-1 rounded">
+                  {a.full_name}
+                  <button onClick={() => handleRemove(i, setSelectedAssignees)} className="text-red-500 text-xs">✕</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="mb-3">
+          <label className="block text-sm mb-1">Проєкт</label>
+          <input
+            type="text"
+            value={projectQuery}
+            onChange={e => setProjectQuery(e.target.value)}
+            className="w-full p-2 border rounded mb-2"
+            placeholder="Пошук проєкту..."
+          />
+          <ul className="max-h-32 overflow-y-auto border rounded mb-2">
+            {projectSuggestions.map((p, i) => (
+              <li key={i} onClick={() => handleSelect(p, setSelectedProjects, setProjectQuery)} className="px-3 py-1 hover:bg-gray-100 cursor-pointer">
+                {p.name}
+              </li>
+            ))}
+          </ul>
+          {selectedProjects.length > 0 && (
+            <ul className="space-y-1 mb-3">
+              {selectedProjects.map((p, i) => (
+                <li key={i} className="flex justify-between bg-gray-100 px-2 py-1 rounded">
+                  {p.name}
+                  <button onClick={() => handleRemove(i, setSelectedProjects)} className="text-red-500 text-xs">✕</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         <div className="mb-3 grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-sm mb-1">З дати</label>
+            <label className="block text-sm mb-1">Дата початку</label>
             <DatePicker
               locale="uk"
               dateFormat="dd.MM.yyyy"
-              selected={startFrom}
-              onChange={date => setStartFrom(date)}
+              selected={startDate}
+              onChange={date => setStartDate(date)}
               placeholderText="дд.мм.рррр"
               className="w-full p-2 border rounded"
             />
           </div>
           <div>
-            <label className="block text-sm mb-1">По дату</label>
+            <label className="block text-sm mb-1">Дедлайн</label>
             <DatePicker
               locale="uk"
               dateFormat="dd.MM.yyyy"
-              selected={startTo}
-              onChange={date => setStartTo(date)}
+              selected={dueDate}
+              onChange={date => setDueDate(date)}
               placeholderText="дд.мм.рррр"
               className="w-full p-2 border rounded"
             />
@@ -165,18 +256,8 @@ export default function ProjectFilterPopover({ onFilter }) {
         </div>
 
         <div className="flex justify-between items-center">
-          <button
-            onClick={clearAll}
-            className="text-xs text-blue-600 hover:underline"
-          >
-            Очистити всі
-          </button>
-          <button
-            onClick={applyFilter}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Фільтрувати
-          </button>
+          <button onClick={clearAll} className="text-xs text-blue-600 hover:underline">Очистити всі</button>
+          <button onClick={applyFilter} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Фільтрувати</button>
         </div>
       </Popover.Panel>
     </Popover>

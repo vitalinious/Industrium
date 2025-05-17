@@ -54,12 +54,17 @@ export default function Header() {
   }, []);
 
   const handleLogout = () => {
-    api.post('/auth/logout/')
-      .finally(() => {
-        localStorage.removeItem('access_token');
-        navigate('/login');
-      });
-  };
+  // Видаляємо токен
+  localStorage.removeItem('access_token');
+
+  // Можна ще почистити інші дані, якщо потрібно:
+  // localStorage.removeItem('refresh_token');
+  // localStorage.removeItem('user_role');
+  // sessionStorage.clear();
+
+  // Перенаправляємо на сторінку входу
+  navigate('/login');
+};
 
   return (
     <header className="h-16 bg-white shadow border-b border-gray-600 flex items-center px-6 justify-between relative z-50">

@@ -24,12 +24,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     position = serializers.StringRelatedField()
+    department = serializers.StringRelatedField()
 
     class Meta:
         model = User
         fields = [
             'username', 'email', 'first_name', 'last_name',
-            'middle_name', 'phone_number', 'position', 'date_joined'
+            'middle_name', 'phone_number', 'department', 'position', 'date_joined'
         ]
 
 
