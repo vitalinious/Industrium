@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api';
 import { Edit2, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import FilterPopover from '../filter';
 import useDeleteItem from '../../hooks/useDeleteItem';
 import useUserRole from '../../hooks/useUserRole';
@@ -12,6 +12,8 @@ export default function Projects() {
   const [error, setError]       = useState('');
   const navigate = useNavigate();
   const role = useUserRole();
+  const [successMsg, setSuccessMsg] = useState('');
+  const location = useLocation();
 
   const formatDate = d => new Date(d).toLocaleDateString('uk-UA');
 
@@ -33,6 +35,12 @@ export default function Projects() {
         setLoading(false);
       }
     })();
+    
+    if (location.state?.success) {
+      setSuccessMsg(location.state.success);
+      setTimeout(() => setSuccessMsg(''), 10000);
+      window.history.replaceState({}, document.title);
+  }
   }, []);
 
   const { deleteItem, isLoading: deleting } = useDeleteItem({
@@ -49,14 +57,22 @@ export default function Projects() {
   return (
     <div className="pb-3 space-y-4">
       <div className="p-3 bg-white shadow rounded flex justify-between mb-2">
-        {role === 'Manager' && (
-          <button
-            className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
-            onClick={handleAdd}
-          >
-            Додати
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {role === 'Manager' && (
+            <button
+              className="bg-green-600 text-white hover:bg-green-700 px-6 py-2 rounded min-w-[110px]"
+              onClick={handleAdd}
+            >
+              Додати
+            </button>
+          )}
+
+          {successMsg && (
+            <div className="text-green-600 text-sm">
+              {successMsg}
+            </div>
+          )}
+        </div>
         <div className="ml-auto">
           <FilterPopover onFilter={data => setProjects(data)} endpoint="projects" />
         </div>

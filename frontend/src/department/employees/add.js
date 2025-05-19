@@ -91,7 +91,7 @@ export default function CreateEmployee() {
         `Пароль: ${data.password}`;
 
       window.prompt('Скопіюйте логін і пароль:', creds);
-      navigate('/department/employees');
+      navigate('/department/employees', { state: { success: 'Співробітника успішно створено' } });
     } catch (err) {
       if (err.response?.status === 400) {
         const messages = Object.entries(err.response.data)

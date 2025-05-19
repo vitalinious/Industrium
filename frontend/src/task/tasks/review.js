@@ -114,6 +114,12 @@ export default function TaskDetail() {
     }
     try {
       await api.post(`/tasks/${id}/reject-complete/`, { reason: rejectionReason });
+
+      await api.post('/task-comments/', {
+        object_id: id,
+        content: `❗ Зауваження від керівника: ${rejectionReason}`
+      });
+
       setRejectionReason('');
       setRejecting(false);
       setActionMsg('Задачу відхилено з зауваженням');
@@ -151,6 +157,12 @@ export default function TaskDetail() {
           <p><strong>Дата створення:</strong> {task.created_at?.slice(0, 10) || '—'}</p>
           <p><strong>Дедлайн:</strong> {task.due_date || '—'}</p>
           <p><strong>Статус:</strong> {task.status_display}</p>
+          {task.comments?.find(c => c.content.startsWith('❗')) && (
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 p-3 rounded">
+              <strong>Зауваження від керівника:</strong><br />
+              {task.comments.find(c => c.content.startsWith('❗')).content.replace('❗ Зауваження від керівника: ', '')}
+            </div>
+          )}
 
           {task.status === 'InProgress' && (
             <button
@@ -166,13 +178,13 @@ export default function TaskDetail() {
             <div className="space-y-2 mt-4">
               <button
                 onClick={handleConfirmTask}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 min-w-[220px]" 
               >
                 ✅ Підтвердити виконання
               </button>
               <button
                 onClick={() => setRejecting(!rejecting)}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 min-w-[220px]"
               >
                 ❌ Не підтверджено
               </button>

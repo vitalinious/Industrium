@@ -52,7 +52,6 @@ export default function FilterPopover({ onFilter }) {
     setSelectedDept('');
   };
 
-  // 3. Збираємо параметри та фільтруємо
   const applyFilter = () => {
     api.get('/positions/', {
       params: {

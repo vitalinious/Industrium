@@ -9,6 +9,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import CustomTokenObtainPairSerializer
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.exceptions import ValidationError
+from .permissions import IsManagerOrReadOnly
 
 
 from .serializers import (
@@ -209,6 +210,10 @@ class TaskViewSet(viewsets.ModelViewSet):
         due_to = params.get('due_to')
         if due_to:
             qs = qs.filter(due_date__lte=due_to)
+            
+        user = self.request.user
+        if user.role == "Worker":
+            qs = qs.filter(assignee=user)  # тільки задачі, призначені цьому працівнику
 
         return qs
 

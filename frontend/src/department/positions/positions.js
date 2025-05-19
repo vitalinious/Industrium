@@ -51,7 +51,7 @@ export default function Positions() {
       <div className="p-3 bg-white shadow rounded flex justify-between items-center mb-2">
         {role === 'Manager' && (
           <button
-            className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
+            className="bg-green-600 text-white hover:bg-green-700 px-6 py-2 rounded min-w-[110px]"
             onClick={() => navigate('/department/positions/add')}
           >
             Додати
@@ -65,14 +65,14 @@ export default function Positions() {
       <div className="overflow-x-auto overflow-y-scroll bg-white shadow rounded max-h-[70vh]">
         <table className="table-fixed min-w-full text-left">
           <colgroup>
-            <col className="w-4" />
-            <col className="w-4/8" />
-            <col className="w-1/8" />
-            <col className="w-24" />
+            <col style={{ width: '1px' }} />
+            <col style={{ width: '45%' }} />
+            <col style={{ width: '45%' }} />
+            <col style={{ width: '100px' }} />
           </colgroup>
           <thead className="bg-white sticky top-0 z-10">
-            <tr className="border-b border-gray-700">
-              <th className="px-2 py-2"></th>
+            <tr className="border-b border-gray-300">
+              <th className="px-4 py-2 border-r border-gray-300">ID</th>
               <th className="px-4 py-2">Назва посади</th>
               <th className="px-4 py-2">Відділ</th>
               {role === 'Manager' && (
@@ -82,10 +82,8 @@ export default function Positions() {
           </thead>
           <tbody>
             {positions.map(pos => (
-              <tr key={pos.id} className="border-b border-gray-700 hover:bg-gray-300">
-                <td className="px-4 py-3">
-                  <input type="checkbox" />
-                </td>
+              <tr key={pos.id} className="border-b hover:bg-gray-100">
+                <td className="px-4 py-3 border-r border-gray-200">{pos.id}</td>
                 <td className="px-4 py-3">{pos.name}</td>
                 <td className="px-4 py-3">{pos.department_name}</td>
                 {role === 'Manager' && (
@@ -93,11 +91,10 @@ export default function Positions() {
                     <button
                       onClick={() => handleEdit(pos.id)}
                       title="Редагувати"
-                      className="p-1 hover:bg-gray-700 rounded"
+                      className="p-1 hover:bg-gray-200 rounded"
                     >
-                      <Edit2 size={16} className="text-gray-400 hover:text-white" />
+                      <Edit2 size={16} className="text-gray-600 hover:text-black" />
                     </button>
-                    
                     <button
                       onClick={() => deleteItem(pos.id)}
                       disabled={isLoading}
@@ -113,7 +110,7 @@ export default function Positions() {
           </tbody>
         </table>
 
-        <div className="py-2 text-center text-sm text-gray-400">
+        <div className="py-2 text-center text-sm text-gray-500">
           Всього позицій: {positions.length}
         </div>
       </div>

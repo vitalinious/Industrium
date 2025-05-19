@@ -13,6 +13,7 @@ export default function Departments() {
   const [error, setError]             = useState('');
   const navigate = useNavigate();
   const role = useUserRole();
+  const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
     async function fetchDepartments() {
@@ -50,7 +51,7 @@ export default function Departments() {
       <div className="p-3 bg-white shadow rounded flex justify-between items-center mb-2">
         {role === 'Manager' && (
           <button
-            className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
+            className="bg-green-600 text-white hover:bg-green-700 px-6 py-2 rounded min-w-[110px]"
             onClick={() => navigate('/department/departments/add')}
           >
             Додати
@@ -62,10 +63,15 @@ export default function Departments() {
       </div>
 
       <div className="overflow-x-auto bg-white shadow rounded">
-        <table className="min-w-full text-left">
-          <thead>
-            <tr className="border-b border-gray-700">
-              <th className="px-2 py-2 w-4"></th>
+        <table className="table-fixed min-w-full text-left">
+          <colgroup>
+            <col className="w-[50px]" />      {/* ID */}
+            <col className="w-auto" />        {/* Назва */}
+            <col className="w-[100px]" />     {/* Дії */}
+          </colgroup>
+          <thead className="bg-white sticky top-0 z-10">
+            <tr className="border-b border-gray-300">
+              <th className="px-4 py-2 border-r border-gray-300">ID</th>
               <th className="px-4 py-2">Назва відділу</th>
               {role === 'Manager' && (
                 <th className="px-4 py-2 text-right whitespace-nowrap">Дії</th>
@@ -74,36 +80,34 @@ export default function Departments() {
           </thead>
           <tbody>
             {departments.map(dep => (
-              <tr key={dep.id} className="border-b border-gray-700 hover:bg-gray-300">
-                <td className="px-4 py-3"><input type="checkbox" /></td>
+              <tr key={dep.id} className="border-b hover:bg-gray-100">
+                <td className="px-4 py-3 border-r border-gray-200">{dep.id}</td>
                 <td className="px-4 py-3">{dep.name}</td>
-                <td className="px-4 py-3 text-right space-x-2">
-                  {role === 'Manager' && (
-                    <>
-                      <button
-                        onClick={() => handleEdit(dep.id)}
-                        title="Редагувати"
-                        className="p-1 hover:bg-gray-700 rounded"
-                      >
-                        <Edit2 size={16} className="text-gray-400 hover:text-white" />
-                      </button>
-                      <button
-                        onClick={() => deleteItem(dep.id)}
-                        disabled={isLoading}
-                        className="p-1 hover:bg-red-50 rounded"
-                        title="Видалити"
-                      >
-                        <X size={16} className="text-red-500 hover:text-red-700" />
-                      </button>
-                    </>
-                  )}
-                </td>
+                {role === 'Manager' && (
+                  <td className="px-4 py-3 text-right space-x-2">
+                    <button
+                      onClick={() => handleEdit(dep.id)}
+                      title="Редагувати"
+                      className="p-1 hover:bg-gray-200 rounded"
+                    >
+                      <Edit2 size={16} className="text-gray-600 hover:text-black" />
+                    </button>
+                    <button
+                      onClick={() => deleteItem(dep.id)}
+                      disabled={isLoading}
+                      className="p-1 hover:bg-red-50 rounded"
+                      title="Видалити"
+                    >
+                      <X size={16} className="text-red-500 hover:text-red-700" />
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
 
-        <div className="py-2 text-center text-sm text-gray-400">
+        <div className="py-2 text-center text-sm text-gray-500">
           Всього відділів: {departments.length}
         </div>
       </div>

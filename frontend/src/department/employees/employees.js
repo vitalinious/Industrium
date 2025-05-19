@@ -12,6 +12,7 @@ export default function Employees() {
   const [error, setError]         = useState('');
   const navigate = useNavigate();
   const role = useUserRole();
+  const [successMsg, setSuccessMsg] = useState('');
 
   const formatPhone = num => {
     const m = num.match(/^(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})$/);
@@ -36,6 +37,7 @@ export default function Employees() {
       }
     }
     fetchEmployees();
+
   }, []);
 
   const { deleteItem, isLoading } = useDeleteItem({
@@ -56,7 +58,7 @@ export default function Employees() {
       <div className="p-3 bg-white shadow rounded flex justify-between items-center mb-2">
         {role === 'Manager' && (
           <button
-            className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
+            className="bg-green-600 text-white hover:bg-green-700 px-6 py-2 rounded min-w-[110px]"
             onClick={() => navigate('/department/employees/add')}
           >
             Додати

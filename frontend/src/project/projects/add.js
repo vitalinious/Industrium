@@ -61,7 +61,7 @@ export default function CreateProject() {
         start_date: formatDateLocal(startDate),
         end_date: endDate ? formatDateLocal(endDate) : null,
       });
-      navigate('/project/projects');
+      navigate('/project/projects', { state: { success: 'Проєкт успішно створено' } });
     } catch (err) {
       if (err.response?.status === 400) {
         const messages = Object.entries(err.response.data)

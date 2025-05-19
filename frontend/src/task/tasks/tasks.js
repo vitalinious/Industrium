@@ -13,6 +13,7 @@ export default function Tasks() {
   const navigate = useNavigate();
   const location = useLocation();
   const role = useUserRole();
+  const [successMsg, setSuccessMsg] = useState('');
 
   const formatDate = d => {
     const parsed = new Date(d);
@@ -31,6 +32,12 @@ export default function Tasks() {
         setLoading(false);
       }
     })();
+
+    if (location.state?.success) {
+      setSuccessMsg(location.state.success);
+      setTimeout(() => setSuccessMsg(''), 10000);
+      window.history.replaceState({}, document.title);
+    }
   }, []);
 
   const { deleteItem, isLoading: deleting } = useDeleteItem({
@@ -46,20 +53,28 @@ export default function Tasks() {
 
   return (
     <div className="pb-3 space-y-4">
-      <div className="p-3 bg-white shadow rounded flex justify-between mb-2">
-        {role === 'Manager' && (
-          <button
-            className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
-            onClick={handleAdd}
-          >
-            Додати
-          </button>
-        )}
+      <div className="p-3 bg-white shadow rounded flex items-center justify-between mb-2">
+        <div className="flex items-center gap-4">
+          {role === 'Manager' && (
+            <button
+              className="bg-green-600 text-white hover:bg-green-700 px-6 py-2 rounded min-w-[110px]"
+              onClick={handleAdd}
+            >
+              Додати
+            </button>
+          )}
+
+          {successMsg && (
+            <div className="text-green-600 text-sm">
+              {successMsg}
+            </div>
+          )}
+        </div>
+
         <div className="ml-auto">
           <FilterPopover onFilter={data => setTasks(data)} endpoint="tasks" />
         </div>
       </div>
-
       <div className="overflow-x-auto overflow-y-scroll bg-white shadow rounded max-h-[70vh]">
         <table className="table-fixed min-w-full text-left">
           <colgroup>
@@ -69,6 +84,7 @@ export default function Tasks() {
             <col className="w-2/12"   />
             <col className="w-2/12"   />
             <col className="w-2/12"   />
+            <col className="w-1/12" />
             <col className="w-1/12"   />
             <col className="w-24"     />
           </colgroup>
@@ -80,6 +96,7 @@ export default function Tasks() {
               <th className="px-4 py-2">Виконавець</th>
               <th className="px-4 py-2">Початок</th>
               <th className="px-4 py-2">Дедлайн</th>
+              <th className="px-4 py-2">Пріоритет</th>
               <th className="px-4 py-2">Статус</th>
               {role === 'Manager' && (
                 <th className="px-4 py-2 text-right whitespace-nowrap">Дії</th>
@@ -99,6 +116,7 @@ export default function Tasks() {
                 <td className="px-4 py-3">{task.assignee_name}</td>
                 <td className="px-4 py-3">{formatDate(task.created_at)}</td>
                 <td className="px-4 py-3">{task.due_date ? formatDate(task.due_date) : '—'}</td>
+                <td className="px-4 py-3">{task.priority_display}</td>
                 <td className="px-4 py-3">{task.status_display}</td>
                 {role === 'Manager' && (
                   <td className="px-4 py-3">

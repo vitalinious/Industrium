@@ -1,6 +1,7 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
 from ..models import User, Department, Position
+from django.contrib.auth import get_user_model
 
 class BaseTestCase(TestCase):
     def setUp(self):
@@ -32,3 +33,22 @@ class BaseTestCase(TestCase):
 
         self.client_worker = APIClient()
         self.client_worker.force_authenticate(user=self.worker)
+
+    def create_user(self, username, email, role="Worker", password="pass1234"):
+        User = get_user_model()
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            role=role,
+            department=self.department,
+            position=self.position,
+            first_name="Test",
+            last_name="User"
+        )
+        return user
+
+    def create_client_for_user(self, user):
+        client = APIClient()
+        client.force_authenticate(user=user)
+        return client

@@ -146,6 +146,7 @@ class TaskSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
     files = serializers.SerializerMethodField()
+    priority_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -157,7 +158,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'order','priority',
             'status', 'status_display',
             'created_at', 'due_date',
-            'comments', 'files',
+            'comments', 'files', 'priority_display',
         ]
         read_only_fields = ['creator', 'creator_name', 'status_display', 'project_name', 'assignee_name', 'created_at']
 
@@ -166,6 +167,9 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def get_assignee_name(self, obj):
         return f"{obj.assignee.last_name} {obj.assignee.first_name}" if obj.assignee else None
+    
+    def get_priority_display(self, obj):
+        return obj.get_priority_display()
     
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)

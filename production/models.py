@@ -130,9 +130,9 @@ class Order(models.Model):
 
 class Task(models.Model):
     PRIORITY_CHOICES = [
-        (1, 'Низька'),
-        (2, 'Середня'),
-        (3, 'Висока'),
+        (1, 'Низький'),
+        (2, 'Середній'),
+        (3, 'Високий'),
     ]
     STATUS_CHOICES = [
         ('Planned', 'Заплановано'),

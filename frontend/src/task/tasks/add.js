@@ -101,7 +101,7 @@ export default function CreateTask() {
 
     try {
       await api.post('/tasks/', payload);
-      navigate('/task/tasks');
+      navigate('/task/tasks', { state: { success: 'Задачу успішно створено' } });
     } catch (err) {
       const msg = err.response?.status === 400
         ? Object.entries(err.response.data).map(([f, msgs]) => `${f}: ${msgs.join(' ')}`).join('\n')
